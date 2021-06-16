@@ -1,0 +1,432 @@
+body {
+    font-family: sans-serif;
+    background: #FFFFFF;
+    overflow-y: scroll;
+}
+
+body button label {
+    font-family: sans-serif;
+}
+
+body #loadingdiv {
+    position: fixed;
+    display: block;
+    background-color: #0087e5;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    padding:auto;
+    margin:0;
+    z-index: 999;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 100vh;
+    opacity: 1.0;
+    transition: opacity 0.5s ease-out;
+}
+
+body .spinner {
+    content: " ";
+    display: inline-block;
+    width: 5em;
+    height: 5em;
+    border-radius: 50%;
+    border: 0.5em solid #0087e5;
+    border-color: transparent #33abff transparent #33abff;
+    animation: spinneranim 1s ease infinite;
+}
+@keyframes spinneranim {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+header .logo {
+    vertical-align:middle;
+    width:3em;
+    margin-right:1em;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom:1em;
+}
+
+nav div {
+    flex: 1;
+    display:flex;
+}
+nav div:nth-child(1) {
+    justify-content: flex-end;
+}
+nav div:nth-child(2) {
+    justify-content: flex-start;
+}
+
+header {
+    font-family: sans-serif;
+    color: #0087e5;
+    text-align:center;
+    font-size:1.5rem;
+    font-weight:bold;
+    margin: 0.1rem 0.1rem 0.3rem 0.1rem;
+    
+}
+
+nav a {
+    cursor:pointer;
+    flex: 1;
+    max-width: 15em;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 1.2rem;
+    margin:0.3rem 0.7rem 0.3rem 0.7rem;
+    font-weight:bold;
+    display:block;
+    background:#0087e5;
+    border-radius:0.5em;
+    padding: 1.0rem 1.0rem 1.0rem 1.0rem;
+}
+
+nav a:hover {
+    color: #FFFFFF;
+    background-color: #33abff;
+}
+
+nav a:active {
+    color: #FFFFFF;
+    background-color: #51d9ff;
+}
+
+main nav a {
+    color: #FFFFFF;
+    font-size: 1.1em;
+    margin:0.0em 0.2em -1em 0.2em;
+    font-weight:normal;
+    border-radius:0.3em;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+main nav a:hover {
+    color: #FFFFFF;
+    background-color: #33abff;
+}
+main nav a:active {
+    color: #FFFFFF;
+    background-color: #51d9ff;
+}
+main nav {
+    width:100%;
+}
+
+
+nav .navselected, nav .navselected:hover, nav .navselected:active {
+    color: #FFFFFF;
+    background-color: #50CC20;
+}
+
+main {
+    display:flex;
+    text-align:center;
+    justify-content: center;
+    color: #111111;
+}
+
+main article {
+    padding:0.1em;
+    margin-bottom:1rem;
+    display:flex;
+    flex-wrap: wrap;
+}
+
+main article div {
+    flex:1;
+    min-width:100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    display:flex;
+}
+
+main article h2 {
+    flex:1;
+    min-width:100%;
+    font-size:1.1rem;
+    color: #33abff;
+    margin: 0.3rem 0.3rem 0.3rem 0.3rem;
+    font-weight:bold;
+}
+
+main a {
+    cursor:pointer;
+    color: #0087e5;
+    text-decoration: none;
+}
+
+main a:hover, main a:active {
+    color: #33abff;
+}
+
+main input[type="text"] {
+    padding:0.5rem 0.5rem 0.5rem 0.5rem;
+    border: 0.1rem solid #AAAAAA;
+    border-radius:0.3rem;
+    text-align:center;
+}
+
+main .addressinput {
+    flex:1;
+    max-width: 30rem;
+    min-width:10rem;
+}
+main .amountinput {
+    min-width:5rem;
+    max-width:15rem;
+}
+
+main input, main button, main .labelbutton, main select {
+    flex:1;
+    font-size:1rem;
+    vertical-align: middle;
+    margin-bottom:1rem;
+}
+
+main input[aria-invalid='true'] {
+    background: #ffaa70;
+}
+
+main .hiddenfloat {
+    opacity: 0;
+    position:absolute;
+    display:block;
+    left:0;
+    top:0;
+    width:0;
+    height:0;
+    padding:0;
+    margin:0;
+}
+
+
+main [type="submit"], main button, main .labelbutton {
+    padding:0.5rem 0.5rem 0.5rem 0.5rem;
+    border-radius: 0.3rem;
+    border: 0.1rem solid #0087e5;
+    background: #0087e5;
+    color: #FFFFFF;
+    font-weight:bold;
+    max-width: 10rem;
+    white-space:nowrap;
+    margin: 0.2rem 0.2rem 0.2rem 0.2rem;
+}
+
+main .longbutton {
+    max-width: 15rem;
+}
+
+main [type="submit"]:hover, main button:hover, main .labelbutton:hover {
+    background-color: #33abff;
+    border: 0.1rem solid #33abff;
+}
+
+main [type="submit"]:active, main button:active, main .labelbutton:active {
+    background-color: #51d9ff;
+    border: 0.1rem solid #51d9ff;
+}
+
+main input[type="radio"], main input[type="checkbox"] {
+    margin-bottom: 0.2rem;
+}
+
+main form {
+    flex:1;
+    display:flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+main form div label {
+    flex:1;
+    min-width:100%;
+    vertical-align: middle;
+}
+
+main form div {
+    flex:1;
+    min-width:100%;
+    display:flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+
+main table {
+    border-top: 1px solid #0087e5;
+    border-left: 1px solid #0087e5;
+    border-spacing: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width:100%;
+    max-width:60rem;
+}
+main table td, th {
+    border-right: 1px solid #0087e5;
+    border-bottom: 1px solid #0087e5;
+    padding:0.2rem;
+    white-space:nowrap;
+    
+    width:100%; 
+    overflow:hidden; 
+    text-overflow:ellipsis;
+}
+
+main table .smalltd {
+    width: 10rem;
+    max-width: 10rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+main table .ellipsis {
+    width:default;
+    max-width:5rem;
+}
+
+main .invisible {
+    display: none;
+}
+
+.keylink {
+    white-space: nowrap;
+    font-family:monospace;
+    font-size:1rem;
+    color: #555555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.keylink:hover, .keylink:active {
+    color: #999999;
+}
+
+.locked, .locked:active, .locked:hover, .locked:visited {
+    color:orange;
+    font-weight:bold;
+    font-family:monospace;
+    font-size:1rem;
+}
+
+.unlocked, .unlocked:active, .unlocked:hover, .unlocked:visited {
+    color:green;
+    font-weight:bold;
+    font-family:monospace;
+    font-size:1rem;
+}
+
+.clipboard, .clipboard:active, .clipboard:hover, .clipboard:visited {
+    font-weight:bold;
+    color:black;
+    font-family:monospace;
+    font-size:1rem;
+}
+
+.delete, .delete:active, .delete:hover, .delete:visited {
+    font-weight:bold;
+    color:red;
+    font-family:monospace;
+    font-size:1rem;
+}
+
+.messagediv {
+    font-weight:bold;
+}
+
+main canvas {
+    width:100%;
+    max-width:100rem;
+}
+
+
+main .centeritem {
+    display:block;
+    margin-bottom:0.8rem;
+}
+
+main div#mining_pure_div, main div#mining_mixed_div {
+    display: none;
+    margin-top:0.8rem;
+}
+
+input#miner_strategy_pure:checked ~ div#mining_pure_div {
+  display:flex;
+}
+input#miner_strategy_mixed:checked ~ div#mining_mixed_div {
+  display:flex;
+}
+
+main select {
+    width:100%; 
+    overflow:hidden; 
+    white-space:nowrap; 
+    text-overflow:ellipsis;
+}
+
+.text_page {
+    display:block;
+    max-width:70rem;
+    min-width:10rem;
+    text-align:left;
+    justify-content: left;
+}
+
+main hr {
+    display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    border: 0.1rem solid black;
+    width:100%;
+}
+
+main p {
+    text-indent: 1.4em;
+    margin-bottom: 1em;
+    margin-top:1em;
+}
+
+main blockquote {
+  background: #efefff;
+  border-left: 0.5em solid #cdcdff;
+  margin-left: 0.5em;
+  padding: 0.7em 1em 0.7em 0.5em;
+}
+main blockquote:before {
+  font-size: 4em;
+  content: open-quote;
+  color: #cdcdff;
+  line-height: 0;
+  margin-right: 0.2em;
+  vertical-align: -0.4em;
+}
+
+main ul {
+    flex:1;
+    display:block;
+    min-width:100%;
+    margin-top:-0.5em;
+}
+
+#about_page {
+    max-width:70rem;
+    text-align: left;
+}

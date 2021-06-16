@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!-- saved from url=(0023)https://demo.massa.net/ -->
+<html lang="en" prefix="og: http://ogp.me/ns#"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Massa Live Demo</title>
+        <meta name="description" content="Demonstration of the Massa decentralized crypto-currency.">
+        <meta property="og:title" content="Massa Live Demo">
+        <meta property="og:description" content="Demonstration of the Massa decentralized crypto-currency.">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://demo.massa.net">
+        <meta property="og:image" content="https://demo.massa.net/preview.png">
+        <link rel="icon" type="image/png" href="https://demo.massa.net/logo.png">
+        <link rel="stylesheet" href="./massa_demo_files/style.css">
+    </head>
+
+    <body>
+        <div id="loadingdiv" style="opacity: 0; display: none;"><div class="spinner"></div></div>
+        <header>Massa Live Demo</header>
+        <nav>
+            <div>
+                <a id="explorer_link" href="file:///Users/adrien/Desktop/massa%20web/massa_demo.htm#explorer" class="navselected">Explorer</a>
+                <a id="wallet_link" href="file:///Users/adrien/Desktop/massa%20web/massa_demo.htm#wallet">Wallet</a>
+            </div>
+            <div>
+                <a id="staking_link" href="https://demo.massa.net/#staking">Staking</a>
+                <a id="about_link" href="https://demo.massa.net/#about">About</a>
+            </div>
+        </nav>
+        <main>
+            <!---  Explorer page -->
+            <section id="explorer_page" class="invisible" style="display: inline;">
+                <h2 class="invisible">Explorer page</h2>
+                <article id="explorer_live">
+                    <h2>Multithreaded Block DAG:</h2>
+                    <div>
+                        <canvas id="explorer_livecanvas" width="1265" height="380"></canvas>
+                    </div>
+                    <div class="centeritem">
+                        <input id="explorer_livescroll" name="explorer_livescroll" type="checkbox" checked=""><label for="explorer_livescroll">Auto-scroll</label>
+                    </div>
+                </article>
+
+                <!-- <article id="blockclique_stats">
+                    <h2>Current Blockclique Statistics</h2>
+                    <div id="explorerInfoStatus"></div>
+                    <div id="explorerInfo"><span>	Last Reboot: <b>27/02/2021, 22:35:15</b><br>	Number of Blocks: <b>6952611</b><br>	Number of Cliques: <b>1</b><br>	Block Throughput: <b>1.97 b/s</b><br>	Transaction Throughput: <b>10192 tx/s</b><br>	Block Stale Rate: <b>0 %</b><br>	Average Transaction Time: <b>40 sec</b><br>	Total Stake: <b>953716</b><br>	Number of Stakers: <b>128</b><br>	</span></div>
+                </article> -->
+
+                <article id="explorer_search">
+                    <h2>Search form</h2>
+                    <form id="explorer_searchform">
+                        <div>
+                            <label for="explorersearch">Search for address (A), transaction id (T), block id (B) or staker id (S):</label>
+                            <input type="text" id="explorersearch" name="explorersearch" class="addressinput" placeholder="Axxx, Txxx, Bxxx or Sxxx">
+                        </div>
+                        <input type="submit" value="Search">
+                    </form>
+
+                    <div id="explorerSearchStatus"></div>
+                    <div id="explorerSearchResult"></div>
+                </article>
+            </section>
+
+            <!---  Wallet page -->
+
+
+            <section id="wallet_page" class="invisible" style="display: none;">
+                <h2 class="invisible">Wallet page</h2>
+
+                <article id="wallet_info">
+                    <h2>Wallet info</h2>
+                    <div id="wallet_totbalance">Final balance:&nbsp;<b>0&nbsp;coins</b></div>
+                    <div id="wallet_naddresses">Number of addresses:&nbsp;<b>0</b></div>
+                    <div>&nbsp;</div>
+                    <div>
+                        <button id="wallet_save" style="display: none;">Save wallet</button><a class="invisible" id="wallet_dlanchor"></a>
+                        <label class="labelbutton" id="wallet_load" for="wallet_loadf">Load wallet</label>
+                        <input class="hiddenfloat" type="file" id="wallet_loadf" name="wallet_loadf" accept="application/json,.json">
+                    </div>
+                </article>
+
+                <article id="wallet_addrs">
+                    <h2>Address list</h2>
+                    <div>
+                    <table id="addrtable"></table>
+                    </div>
+
+                    <div>
+                    <form id="waddr_add">
+                    <div><label for="addressinput">Add private key:</label></div>
+                    <div><input type="text" class="addressinput" id="addressinput" name="addressinput"></div>
+                    <div>
+                        <button type="button" class="longbutton" id="genaddr">Generate private key</button>
+                        <input type="submit" id="addaddr" value="Add">
+                    </div>
+                    </form>
+                    </div>
+
+                </article>
+
+                <article id="wallet_trans">
+                    <hr>
+                    <h2>Generate transaction</h2>
+                    <div class="messagediv"><span id="wallet_trans_progress">Add at least one address to send transactions.</span></div>
+                    <form id="trans_send" style="display: none;">
+                        <div>
+                            <label for="sendfromaddr">From address:</label>
+                            <select id="sendfromaddr" name="sendfromaddr" class="addressinput"></select>
+                        </div>
+                        <div>
+                            <label for="sendtoaddr">Destination address:</label>
+                            <input type="text" id="sendtoaddr" name="sendtoaddr" class="addressinput">
+                        </div>
+                        <div>
+                            <label for="sendamount">Amount of coins:</label>
+                            <input type="text" id="sendamount" name="sendamount" class="amountinput" placeholder="0">
+                        </div>
+                        <div>
+                            <label for="sendfee">Fee (≥ 0.00000001):</label>
+                            <input type="text" id="sendfee" name="sendfee" class="amountinput" placeholder="0">
+                        </div>
+                        <input type="submit" id="sendsubmit" name="sendsubmit" value="Send">
+                    </form>
+                </article>
+
+            </section>
+
+            <!---  staking page -->
+            <section id="staking_page" class="invisible" style="display: none;">
+                <h2 class="invisible">Staking page</h2>
+
+                <article id="staking_stakerlist" style="display: none;">
+                    <h2>My simulated stakers</h2>
+                    <div><table id="staking_stakertable"></table></div>
+                </article>
+
+                <article id="create_staker">
+                    <h2>Create a simulated staker</h2>
+                    <div id="stakingInfoStatus">&nbsp;</div>
+                    <div class="messagediv"><span id="staking_createstaker_progress"></span></div>
+                    <form id="create_staker_form">
+                        <div>
+                            <label for="staker_duration">Staking duration (60 to <span id="staking_maxduration">604800</span>&nbsp;s):</label>
+                            <input type="text" id="staker_duration" name="staker_duration" class="amountinput" placeholder="604800">
+                        </div>
+                        <div>
+                            <label for="staker_power">Staking power (0 to <span id="staking_maxpower">9537</span>):</label>
+                            <input type="text" id="staker_power" name="staker_power" class="amountinput" placeholder="9537">
+                        </div>
+                        <div>
+                            <label for="staker_address">Target address (from the Wallet tab):</label>
+                            <select id="staker_address" name="staker_address" class="addressinput"></select>
+                        </div>
+                        <div>
+                            <label for="staker_bandwidth">Staker bandwidth (32 to 128 Mbps):</label>
+                            <input type="text" id="staker_bandwidth" name="staker_bandwidth" class="amountinput" placeholder="64">
+                        </div>
+                        <input type="submit" value="Create staker">
+                    </form>
+                </article>
+
+            </section>
+
+            <!---  About page -->
+            <section id="about_page" class="invisible" style="display: none;">
+                <article id="summary">
+                    <h2 class="invisible">Summary</h2>
+                    <p>
+                        Decentralized crypto-currencies based on the Blockchain architecture can only process a few transactions per second in the whole network. This results in a permanent congestion and high transaction fees, which limits their attractiveness and adoption. New generations of crypto-currencies tend to tackle the scaling issue either by giving up on full decentralization or by lowering their security levels.
+                    </p>
+                    <blockquote>
+                        This sounds like there’s some kind of scalability trilemma at play. The trilemma claims that blockchain systems can only at most have two of the following three properties: Decentralization (…), Scalability (…), Security (…). <a href="https://github.com/ethereum/wiki/wiki/Sharding-FAQ#this-sounds-like-theres-some-kind-of-scalability-trilemma-at-play-what-is-this-trilemma-and-can-we-break-through-it" rel="noopener noreferrer" target="_blank"> - Vitalik Buterin</a>
+                    </blockquote>
+                    <p>
+                        Massa solves the scalability trilemma by allowing the production of parallel blocks in a multithreaded block graph,
+                        while transaction sharding ensures that transactions of parallel blocks are compatible by construction.
+                        Our open-source simulations show that our architecture scales beyond 10,000 transactions per second,
+                        while staying decentralized and secure (see the <a href="https://arxiv.org/pdf/1803.09029" rel="noopener noreferrer" target="_blank"> technical paper</a> or the <a href="https://massa.net/blog/post/0/" rel="noopener noreferrer" target="_blank"> blog post introduction</a>).
+                        The Massa technology is therefore a promising basis for future crypto-currencies, and can bring decentralization back into the spotlight. <br>
+                    </p>
+                    <nav>
+                        <a href="https://arxiv.org/pdf/1803.09029">technical paper</a>
+                    </nav>
+
+                    <h2>Live demo</h2>
+
+                    <p>
+                        You can explore a live growing blockclique, create a wallet, control a new staker (receiving free coins). Within a few minutes, your staker will produce some blocks and receive block rewards. Try sending coins to your friends! <br><br>
+                        We simulate on a single server (4Ghz 8-cores) a network of nodes that produce blocks, send blocks to peers and compute the best clique of compatible blocks. We compute the time for each message and block to be transmitted from one node to another depending on the simulated latency and bandwidth between each node of the network (average bandwidth of 64Mbps and latency of 100ms, similar to the Bitcoin network). <br><br>
+                    The parameters of Blockclique are the number of threads T, the average time between two blocks in each thread t<sub>0</sub>, the maximum block size BS, and the finality parameter F. We set T=32 threads, t<sub>0</sub>=16s, BS=675 kB and F=64 blocks. Due to cpu constraints (hundreds of nodes on the same server), we do not simulate endorsements, so we assume E=0, and blocks are by default filled with dummy transactions.
+                    </p>
+                </article>
+
+                <article id="links">
+                    <h2>Useful links</h2>
+
+                    <p>
+                        We'll be happy to hear your feedback and answer your questions.
+                        Please come to the Reddit community  <a href="https://www.reddit.com/r/Blockclique/" rel="noopener noreferrer" target="_blank"> r/blockclique </a>
+                        where we can discuss the demo,
+                        the <a href="https://arxiv.org/pdf/1803.09029" rel="noopener noreferrer" target="_blank"> technical paper</a>,
+                        the <a href="https://massa.net/blog/post/0/" rel="noopener noreferrer" target="_blank"> blog post introduction</a>
+                        or the <a href="https://gitlab.com/blockclique/blockclique" rel="noopener noreferrer" target="_blank"> open-source simulations</a>.
+                        You can also contact us by email at  <a href="mailto:info@massa.net">info@massa.net</a>.
+                    </p>
+
+                </article>
+
+                <article id="authors">
+                    <h2>Authors</h2>
+
+                    <p>
+                        Damir Vodenicarevic &amp; Sébastien Forestier &amp; Adrien Laversanne-Finot
+                    </p>
+
+                </article>
+
+                <article id="disclaimer">
+                    <h2>Disclaimer and license</h2>
+                    <p>
+                        This is just a simulation: the coins have no value, and we can restart the simulation from scratch at any time without notice.
+                        We do not store data about you, and this website does not use cookies nor third-party tracking. The simulation software is licensed under the permissive open-source <a href="https://opensource.org/licenses/GPL-3.0" rel="noopener noreferrer" target="_blank">GPL-3.0 license</a>.
+                    </p>
+                </article>
+
+            </section>
+
+        </main>
+        <!-- Load the scripts at the end for better UX -->
+        <script src="./massa_demo_files/main.js"></script>
+        <script src="./massa_demo_files/explorer.js"></script>
+        <script src="./massa_demo_files/wallet.js"></script>
+        <script src="./massa_demo_files/staking.js"></script>
+        <script src="./massa_demo_files/browserified.js"></script>
+    
+
+</body></html>
