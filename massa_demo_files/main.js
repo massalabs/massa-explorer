@@ -39,10 +39,15 @@ RESTRequest= function(method, resource, data, completion_callback, error_callbac
 	console.log(url)
 
 	xhr.open(method, url, true);
-	xhr.setRequestHeader('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-	if(data != null)
-		xhr.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-	
+	if(method == "POST") {
+		xhr.setRequestHeader("Content-Type", "application/json");
+	}
+	else {
+		xhr.setRequestHeader('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+		if(data != null)
+			xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+}
+
 	function onreadystatechange()
 	{
 		if(this.readyState === 4) {

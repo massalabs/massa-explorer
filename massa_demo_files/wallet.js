@@ -1,3 +1,25 @@
+latest_period = null
+var walletUpdateLatestPeriodXhr= null
+var walletUpdateLatestPeriodTimeout= null
+getLatestPeriod = function() {
+    if(walletUpdateLatestPeriodTimeout != null) { clearTimeout(walletUpdateLatestPeriodTimeout); walletUpdateLatestPeriodTimeout=null; }
+	if(walletUpdateLatestPeriodXhr != null) { var tmp=walletUpdateLatestPeriodXhr; walletUpdateLatestPeriodXhr=null; tmp.abort(); }
+	function onresponse(resJson, xhr) {
+        walletUpdateLatestPeriodXhr = null;
+
+		latest_period = resJson.latest_slot.period
+        walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 3000, false)
+	}
+	function onerror(error, xhr) {
+		if(walletUpdateLatestPeriodXhr != null) { // yeah, otherwise we actually wanted it to die
+			walletUpdateLatestPeriodXhr = null;
+            walletUpdateLatestPeriodTimeout = setTimeout(walletGetState, 5000, false)
+		}
+	}
+	RESTRequest("GET", "state", null, onresponse, onerror);
+}
+getLatestPeriod()
+
 wallet_addrs= {};
 wallet_empty= true;
 wallet_sending= false;
@@ -46,7 +68,7 @@ walletInit= function() {
 
     document.getElementById('genaddr').addEventListener("click", function() {
         var version= 0;
-        wallet_addrinput.value= xbqcrypto.deduce_private_base58check(xbqcrypto.generate_random_privkey(), version);
+        wallet_addrinput.value= xbqcrypto.deduce_private_base58check(window.crypto.getRandomValues(new Uint8Array(32)));
         wallet_addrinput.removeAttribute("aria-invalid");
     });
     document.getElementById('waddr_add').addEventListener("submit", function(e) {
@@ -73,7 +95,6 @@ walletInit= function() {
         // validate sender address
         var sendfrompubkey= null;
         var sendfromprivkey= null;
-        var sendfromversion= null;
         var sendfromaddr= null;
         var sendtoaddr= null;
         try {
@@ -82,15 +103,15 @@ walletInit= function() {
             var tmpkey= wallet_addrs[wallet_sendfromaddr.value].key;
             sendfrompubkey= tmpkey.pubkey;
             sendfromprivkey= tmpkey.privkey;
-            sendfromversion= tmpkey.version;
             sendfromaddr= tmpkey.address;
+            sendfromb58cpubkey = tmpkey.b58cpubkey
+            sendfromb58cprivkey = tmpkey.b58cprivkey
         } catch(e) { }
         // validate destination address
         var sendtoaddr= null;
         var sendtopkh= null;
         try {
             var parsed= xbqcrypto.parse_address(wallet_sendtoaddr.value);
-            sendtoversion= parsed.version;
             sendtopkh= parsed.pubkeyhash;
             sendtoaddr= wallet_sendtoaddr.value;
             wallet_sendtoaddr.removeAttribute("aria-invalid");
@@ -100,11 +121,11 @@ walletInit= function() {
         // validate amount
         var sendamount= null;
         try {
-            sendamount= parseInt(Math.round(Number(wallet_sendamount.value) * 1e8));
+            sendamount= parseInt(Math.round(Number(wallet_sendamount.value)));
             if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 47) - 1))
                 throw "Invalid amount.";
             wallet_sendamount.removeAttribute("aria-invalid");
-            wallet_sendamount.value= sendamount / 1e8;
+            wallet_sendamount.value= sendamount;
         } catch(e) {
             sendamount= null;
             wallet_sendamount.setAttribute("aria-invalid", "true");
@@ -112,83 +133,56 @@ walletInit= function() {
         // validate fee
         var sendfee= null;
         try {
-            sendfee= parseInt(Math.round(Number(wallet_sendfee.value) * 1e8));
+            sendfee= parseInt(Math.round(Number(wallet_sendfee.value)));
             if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 24) - 1)))
                 throw "Invalid fee.";
             wallet_sendfee.removeAttribute("aria-invalid");
-            wallet_sendfee.value= sendfee / 1e8;
+            wallet_sendfee.value = sendfee;
         } catch(e) {
             sendfee= null;
             wallet_sendfee.setAttribute("aria-invalid", "true");
         }
-        var everythingok= (sendfromaddr != null && sendfrompubkey != null && sendfromprivkey != null && sendfromversion != null
-            && sendtoaddr != null && sendtopkh != null && sendtoversion != null && sendamount != null && sendfee != null);
+        var everythingok= (sendfromaddr != null && sendfrompubkey != null && sendfromprivkey != null
+            && sendtoaddr != null && sendtopkh != null && sendamount != null && sendfee != null);
         
         // Confirm
         if(everythingok) {
             var confirm_message= "Transaction summary:\n"
                 + "\tFrom: " +  sendfromaddr + "\n"
                 + "\tTo: " +  sendtoaddr + "\n"
-                + "\tAmount: " +  (sendamount/1e8) + " coins\n"
-                + "\tFee: " +  (sendfee/1e8) + " coins\n"
+                + "\tAmount: " +  (sendamount) + " coins\n"
+                + "\tFee: " +  (sendfee) + " coins\n"
                 + "\nPlease confirm this transaction.";
             everythingok= confirm(confirm_message);
         }
-        
+
         // generate transaction
         if(everythingok) {
             try {
-                var transac= xbqcrypto.Buffer.alloc(132);
-                
-                // Version (0 -> 1)
-                var version= 0;
-                transac.writeUInt8(version, 0);
-                
-                // Timestamp shifted so that 0 => 1st january 2018 at 00:00:00. (1 -> 5)
-                var timestamp= xbqcrypto.get_timestamp();
-                if(timestamp < 0 || timestamp > (Math.pow(2, 32)-1))
-                    throw "Timestamp invalid.";
-                transac.writeUInt32BE(timestamp, 1);
-                
-                // destination version and address (5 -> 26)
-                transac.writeUInt8(sendtoversion, 5);
-                transac.write(sendtopkh.toString('binary'), 6, 20, 'binary');
+                // walletGetState();
+                // console.log(getLatestPeriod())
+                getLatestPeriod(function() {
+                    console.log('huzzah, I\'m done!');
+                })
 
-                // fee (26 -> 29)
-                transac.writeUIntBE(sendfee, 26, 3);
+                var transac = {"content": {"op": {"Transaction": {}}}}
+
+                transac.content["sender_public_key"] = sendfromb58cpubkey.slice(3)
+                transac.content["fee"] = sendfee
+                transac.content["expire_period"] = latest_period + 5
+                transac.content.op.Transaction["recipient_address"] = sendtoaddr.slice(1)
+                transac.content.op.Transaction["amount"] = sendamount
                 
-                // from pubkey (29 -> 62) + reminder byte
-                var frompkh_extrabyte= (sendfrompubkey[0] == 0x03 ? 128 : 0); 
-                var frompkh_mainpart= sendfrompubkey.slice(1);
-                transac.writeUInt8(sendfromversion, 29);
-                transac.write(frompkh_mainpart.toString('binary'), 30, 32, 'binary');
-                
-                // amount (62 -> 68)
-                var resamount48= parseInt(sendamount + (frompkh_extrabyte * Math.pow(2, 8*5)));
-                transac.writeUIntBE(resamount48, 62, 6);
-                
-                // signature (68 -> 132)
-                var signature= xbqcrypto.sign_data(transac.slice(0, 68), sendfromprivkey);
-                transac.write(signature.toString('binary'), 68, 64, 'binary');
-                
-                /*
-                //verification
-                var reconstpubkey= xbqcrypto.Buffer.concat([ xbqcrypto.Buffer.from( (transac.readUInt8(62) >= 128 ? [0x03] : [0x02]) ) ,
-                                                             transac.slice(30, 30+32) ]);
-                var verif= xbqcrypto.verify_data_signature(transac.slice(0, 68), transac.slice(68), reconstpubkey)
-                alert(verif)
-                */
-                
-                restransac= transac;
+                var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey.slice(3)), 16)
+                transac["signature"] = sign_content(transac, privkey)
             } catch(e) { alert('Error while generating transaction: ' + e); }
         }
         // send transaction
-        if(restransac != null) {
-            var restransacb64= restransac.toString('base64');
+        if(transac != null) {
             wallet_sending= true;
             wallet_update_sendform();
             wallet_update_info();
-            walletSendTransaction(restransacb64);
+            walletSendTransaction(transac);
         }
        
     }, false);
@@ -197,15 +191,38 @@ walletInit= function() {
     finished_loading('wallet_init');
 }
 
+function sign_content(transaction, privkey) {    
+    // Compute bytes compact
+    var encoded_data = xbqcrypto.compute_bytes_compact(transaction.content.fee, transaction.content.expire_period,
+    transaction.content.sender_public_key, 0, transaction.content.op.Transaction.recipient_address, transaction.content.op.Transaction.amount)
+
+    // Hash byte compact
+    var hash_encoded_data = xbqcrypto.hash_sha256(encoded_data)
+
+    // Signing a digest
+    var digest = Secp256k1.uint256(hash_encoded_data)
+    const sig = Secp256k1.ecsign(privkey, digest)
+    return xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([xbqcrypto.Buffer.from(sig.r, "hex"), xbqcrypto.Buffer.from(sig.s, "hex")]))
+}
+
 parse_textprivkey= function(txt) {
-    var parsed= xbqcrypto.parse_private_base58check(txt);
-    var version= parsed.version;
+    // Parse private key
+    var parsed = xbqcrypto.parse_private_base58check(txt);
     var privkey= parsed.privkey;
-    var pubkey= xbqcrypto.get_pubkey_from_privkey(privkey);
-    var addr= xbqcrypto.deduce_address(pubkey, version);
-    var thread= xbqcrypto.get_address_thread(addr);
-    var b58cpubkey= xbqcrypto.deduce_public_base58check(pubkey, version);
-    return {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, version: version, thread: thread};
+    privkey = Secp256k1.uint256(privkey, 16)
+    // Get pubkey
+    var pubkey = Secp256k1.generatePublicKeyFromPrivateKeyData(privkey);
+    pubY = Secp256k1.uint256(pubkey.y, 16)
+    var prefix = (pubY.isEven() ? 0x02 : 0x03);
+    prefix = xbqcrypto.Buffer.from([prefix], "hex")
+    var pubkey = xbqcrypto.Buffer.concat([prefix, xbqcrypto.Buffer.from(pubkey.x, "hex")])
+    // Get address
+    var addr = xbqcrypto.deduce_address(pubkey);
+    // Get thread
+    var thread = xbqcrypto.get_address_thread(addr);
+    // Get base58check pubkey
+    var b58cpubkey = xbqcrypto.deduce_public_base58check(pubkey);
+    return {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, thread: thread};
 }
 
 wallet_upload= function() {
@@ -266,9 +283,6 @@ wallet_download= function() {
 }
 
 wallet_add_key= function(key) {
-
-    console.log('ici')
-
     // Get address and check if already exists
     if(wallet_addrs.hasOwnProperty(key.address)) {
         alert('Address already present in wallet.');
@@ -394,12 +408,13 @@ walletSendTransaction= function(data) {
 	
 	function onresponse(resJson, xhr) {
 		walletSendTransactionXhr= null;
-		if(resJson.result == "OK") {
-		    alert('Transaction was successfully sent:\n' + resJson.txId);
-		    document.getElementById('trans_send').reset();
-		    openhash('#explorer?explore=' + encodeURIComponent(resJson.txId));
-		} else {
-		    alert('An error occured while sending the transaction: ' + resJson.errorMessage + '. Transaction not sent.');
+        if(Array.isArray(resJson)) {
+            document.getElementById('trans_send').reset();
+            alert('Transaction was successfully sent:\n' + resJson[0]);
+            openhash('#explorer?explore=T' + encodeURIComponent(resJson[0]));
+        }
+        else {
+		    alert('An error occured while sending the transaction. Transaction not sent.');
 		}
 	    wallet_sending= false;
 	    wallet_update_sendform();
@@ -417,9 +432,10 @@ walletSendTransaction= function(data) {
 			}
 		}
 	}
-	walletSendTransactionXhr= RESTRequest("PUT", 'createTransaction', 'txb64='+encodeURIComponent(data), onresponse, onerror);
+	// walletSendTransactionXhr= RESTRequest("PUT", 'createTransaction', 'txb64='+encodeURIComponent(data), onresponse, onerror);
+    data = JSON.stringify([data])
+    walletSendTransactionXhr = RESTRequest("POST", 'send_operations', data, onresponse, onerror);
 }
-
 
 var walletUpdateBalancesXhr= null
 var walletUpdateBalancesTimeout= null
@@ -433,34 +449,14 @@ walletUpdateBalancesInfo= function() {
 		for(var k in resJson) {
             if(!resJson.hasOwnProperty(k))
                 continue;
-
-            console.log(resJson)
-
             for (var k in wallet_addrs) {
-
-                var thread = wallet_addrs[k].key.thread
-                // thread = 29
-
-                console.log('lulu')
-                console.log(wallet_addrs[k].key.thread)
-                console.log(resJson.final_data.data[thread])
-                // console.log(resJson.final_data.data)
-
-                wallet_addrs[k].balance = parseFloat(resJson.final_data.data[thread].k.balance);
+                // var thread = wallet_addrs[k].key.thread
+                wallet_addrs[k].balance = parseFloat(resJson[k.substring(1)].final_ledger_data.balance);
                 var balancefield= document.getElementById('wallet_balance_'+k);
                 if(!balancefield)
                     continue;
                 balancefield.innerHTML= wallet_addrs[k].balance;
             }
-
-
-            // if(wallet_addrs.hasOwnProperty(k)) {
-            //     wallet_addrs[k].balance= parseFloat(resJson[k]);
-            //     var balancefield= document.getElementById('wallet_balance_'+k);
-            //     if(!balancefield)
-            //         continue;
-            //     balancefield.innerHTML= wallet_addrs[k].balance;
-            // }
 		}
 		wallet_update_info();
 		walletUpdateBalancesTimeout= setTimeout(walletUpdateBalancesInfo, 10000, false)
@@ -471,24 +467,17 @@ walletUpdateBalancesInfo= function() {
 			walletUpdateBalancesTimeout= setTimeout(walletUpdateBalancesInfo, 3000, false)
 		}
 	}
-	
-    console.log('lala')
-    console.log(wallet_addrs)
 
     var reqval= '';
     var idx = 0
 	for (var k in wallet_addrs) {
-
-        console.log('k')
-        console.log(k)
-
         if(!wallet_addrs.hasOwnProperty(k))
             continue;
-	    reqval += (reqval == '' ? '?addrs[' + encodeURIComponent(idx) +']=' : '&addrs[' + encodeURIComponent(idx) +']=') + encodeURIComponent(k);
+	    reqval += (reqval == '' ? '?addrs[' + encodeURIComponent(idx) +']=' : '&addrs[' + encodeURIComponent(idx) +']=') + encodeURIComponent(k.substring(1));
         idx += 1
     }
 	if(reqval != '')
         // walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_data?addrs[0]=2oxLZc6g6EHfc5VtywyPttEeGDxWq3xjvTNziayWGDfxETZVTi&' + reqval, null, onresponse, onerror);
-        walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_data' + reqval, null, onresponse, onerror);
+        walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_info' + reqval, null, onresponse, onerror);
 }
 

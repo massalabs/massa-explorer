@@ -30,11 +30,11 @@ explorerGetConfig= function() {
 	function onerror(error, xhr) {
 		if(explorerGetViewIntervalXhr != null) { // yeah, otherwise we actually wanted it to die
 			explorerGetViewIntervalXhr= null;
-			explorerGetViewIntervalTimeout= setTimeout(explorerGetViewInterval, 3000)
+			explorerGetViewIntervalTimeout= setTimeout(explorerGetConfig, 3000)
 		}
 	}
 
-	explorerGetConfigXhr = RESTRequest("GET", 'consensus_config', null, onresponse, onerror);
+	RESTRequest("GET", 'consensus_config', null, onresponse, onerror);
 }
 explorerGetConfig()
 
@@ -140,7 +140,7 @@ explorerInit= function() {
 			}
 		}
 		if(mini != null)
-			openhash('#explorer?explore=' + encodeURIComponent(explorerViewIntervalBlocks[mini].blockId) + '&nocenter');
+			openhash('#explorer?explore=B' + encodeURIComponent(explorerViewIntervalBlocks[mini].blockId) + '&nocenter');
 		else
 			openhash('#explorer');
 	}
@@ -174,13 +174,13 @@ explorerSearch= function(what, first=true) {
 	// explorerViewSelId= null
 
 	explorerViewSelId= what
-	// var isBlock= false
-	// if(what) {
-	// 	if(what.length > 1) {
-	// 		isBlock= (what[0] == 'B')
-	// 		explorerViewSelId= what;
-	// 	}
-	// }
+	var isBlock = false
+	if(what) {
+		if(what.length > 1) {
+			isBlock = (what[0] == 'B')
+			explorerViewSelId = what;
+		}
+	}
 	
 	if(first) {
 		if(div) div.innerHTML= '';
@@ -189,7 +189,7 @@ explorerSearch= function(what, first=true) {
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
 	}
 	function onresponse(resJson, xhr) {
-		resJson['blockId'] = what
+		resJson['what'] = what
 
 		explorerSetSearchTable(resJson);
 		var statusdiv= document.getElementById('explorerSearchStatus');
@@ -217,8 +217,12 @@ explorerSearch= function(what, first=true) {
 			explorerSearchTimeout= setTimeout(explorerSearch, 1000, what, false)
 		}
 	}
-	// explorerSearchXhr= RESTRequest("GET", 'explorerSearch?q='+encodeURIComponent(what), null, onresponse, onerror );
-	explorerSearchXhr = RESTRequest("GET", 'block/'+encodeURIComponent(what), null, onresponse, onerror);
+	if(what[0] == 'B')
+		explorerSearchXhr = RESTRequest("GET", 'block/'+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
+	if(what[0] == 'T')
+		explorerSearchXhr = RESTRequest("GET", 'get_operations?operation_ids[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
+	if(what[0] == 'A')
+		explorerSearchXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
 }
 
 explorerSearchClear= function() {
@@ -277,66 +281,123 @@ explorerSetSearchTable= function(jsondata) {
 	}
 	
 	// TODO
-	// var typestr= String(jsondata['type'])
-	// if(typestr == 'block') {
-	addheader('Block ' + String(jsondata['blockId']));
-	// addheader('Block');
-	// if(String(jsondata['stakerId']) == 'Genesis')
-	// 	addrow('Staker ID', 'Genesis');
-	// else {
-	// 	var tdc= addrow('Staker ID', null);
-	// 	tdc.appendChild(createSearchLink(String(jsondata['stakerId'])))
-	// 	var stakerAddr= String(jsondata.header.content['creator'])
-	// 	if(stakerAddr != 'None') {
-	// 		var tdc= addrow('Staker address', null)
-	// 		tdc.appendChild(createSearchLink(stakerAddr))
-	// 	}
-	// }
-	addrow('Creator', jsondata.header.content['creator'])
-	addrow('Thread', jsondata.header.content.slot['thread'])
-	addrow('Generation', jsondata.header.content.slot['period'])
-	// addrow('Reward', jsondata['reward'])
-	// addrow('Priority', jsondata['priority'])
-	// addrow('Protocol seed', jsondata['protocolSeed'])
-	// var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-	// addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-	addrow('Signature', jsondata.header['signature'])
-	
-	// addrow('Tx count', String(jsondata['numberOfTransactions']))
-	// var transactions= jsondata['transactions'];
-	// for(var i= 0 ; i < transactions.length ; i++) {
-	// 	var tdc= addrow('Transaction', null)
-	// 	tdc.appendChild(createSearchLink(String(transactions[i])));
-	// }
-	
-	parentIds = jsondata.header.content['parents'];
-	for(var i= 0 ; i < parentIds.length ; i++) {
-		var tdc= addrow('Parent (thread ' + i + ')', null)
-		tdc.appendChild(createSearchLink(String(parentIds[i])));
+	if (jsondata['what'][0] =='B') {
+		addheader('Block ' + String(jsondata['what']));
+		if (jsondata['Active']) {
+			// addheader('Block');
+			// if(String(jsondata['stakerId']) == 'Genesis')
+			// 	addrow('Staker ID', 'Genesis');
+			// else {
+			// 	var tdc= addrow('Staker ID', null);
+			// 	tdc.appendChild(createSearchLink(String(jsondata['stakerId'])))
+			// 	var stakerAddr= String(jsondata.header.content['creator'])
+			// 	if(stakerAddr != 'None') {
+			// 		var tdc= addrow('Staker address', null)
+			// 		tdc.appendChild(createSearchLink(stakerAddr))
+			// 	}
+			// }
+			addrow('Creator', jsondata.Active.header.content['creator'])
+			addrow('Thread', jsondata.Active.header.content.slot['thread'])
+			addrow('Generation', jsondata.Active.header.content.slot['period'])
+			// addrow('Reward', jsondata['reward'])
+			// addrow('Priority', jsondata['priority'])
+			// addrow('Protocol seed', jsondata['protocolSeed'])
+			// var tmpts= new Date(1000 * Number(jsondata['timestamp']))
+			// addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
+			addrow('Signature', jsondata.Active.header['signature'])
+			
+			// addrow('Tx count', String(jsondata['numberOfTransactions']))
+			var operations = jsondata.Active.operations;
+			for(var i= 0 ; i < operations.length ; i++) {
+				var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tdc= addrow('Transaction', null)
+				tdc.appendChild(createSearchLink('T' + String(tx_id)));
+			}
+			
+			parentIds = jsondata.Active.header.content['parents'];
+			for(var i= 0 ; i < parentIds.length ; i++) {
+				var tdc= addrow('Parent (thread ' + i + ')', null)
+				tdc.appendChild(createSearchLink(String(parentIds[i])));
+			}
+		}
+		else if (jsondata['Discarded']) {
+			addrow('Discarded', jsondata.Discarded)
+		}
 	}
-	// }
-	// else if(typestr == 'transaction') {
-	// 	addheader('Transaction ' + String(jsondata['transactionId']))
-	// 	var transactionInBlocks= jsondata['transactionInBlocks'];
-	// 	for(var i= 0 ; i < transactionInBlocks.length ; i++) {
-	// 		var tdc= addrow('In block', null);
-	// 		tdc.appendChild(createSearchLink(String(transactionInBlocks[i])));
-	// 	}
-	// 	var tdc= addrow('From', null);
-	// 	tdc.appendChild(createSearchLink(String(jsondata['fromAddress'])));
-	// 	var tdc= addrow('To', null);
-	// 	tdc.appendChild(createSearchLink(String(jsondata['toAddress'])));
-	// 	addrow('Value', jsondata['value']);
-	// 	addrow('Fee', jsondata['fee']);
-	// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-	// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-	// 	addrow('Thread', jsondata['thread']);
-	// 	addrow('Finality State', jsondata['cliqueAheadOf']);
-	// 	addrow('Transaction Time', jsondata['txTime']);
-	// }
-	// else if(typestr == 'address') {
-	// 	addheader('Address ' + String(jsondata['address']));
-	// 	addrow('Balance', jsondata['balance']);
+	else if (jsondata['what'][0] =='T') {
+		
+		// [
+		//     [
+		//         "bLZQBhWo89EyJ6BfpE3smTEz4EvBn3mUdHzCXjte3uMAV8GQc",
+		//         {
+		//             "in_blocks": {
+		//                 "2gyRd59BfbtZTnF9ndpsNAXbiAjkxs54oD5Ckbza3LHXzroabR": [
+		//                     0,
+		//                     false
+		//                 ]
+		//             },
+		//             "in_pool": true,
+		//             "op": {
+		//                 "content": {
+		//                     "expire_period": 316403,
+		//                     "fee": 5342,
+		//                     "op": {
+		//                         "Transaction": {
+		//                             "amount": 12332,
+		//                             "recipient_address": "2d561cZd5KHZzHmwNWiBxSdosrty7MSrinVvQVSSGBNQyzCipq"
+		//                         }
+		//                     },
+		//                     "sender_public_key": "4vYrPNzUM8PKg2rYPW3ZnXPzy67j9fn5WsGCbnwAnk2Lf7jNHb"
+		//                 },
+		//                 "signature": "D4BxEkSehY4dX68mKcx5SvtfbUM3fhUdug3CF11GmCgfxwqdCay7NVLCmJswKZiwXvX3X2xnY2i2XJZTLuagGBBkMefi1"
+		//             }
+		//         }
+		//     ]
+		// ]
+
+		try {
+			addheader('Transaction ' + String(jsondata['what']))
+			var transactionInBlocks = jsondata[0][1]['in_blocks'];
+			Object.entries(transactionInBlocks).forEach(([key, value]) => {
+				var tdc= addrow('In block', null);
+				tdc.appendChild(createSearchLink('B' + String(key)));
+				if(value[1]) {
+					addrow('Finality state', 'Final');
+				}
+				else
+					addrow('Finality state', 'Pending');
+				// addrow('Finality State', value[1]);
+			});
+			// for(var i= 0 ; i < transactionInBlocks.length ; i++) {
+			// 	var tdc= addrow('In block', null);
+			// 	tdc.appendChild(createSearchLink('B' + String(transactionInBlocks[i])));
+			// }
+			var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
+			addr = xbqcrypto.parse_public_base58check('PBK' + addr).pubkey
+			addr = xbqcrypto.deduce_address(addr)
+			var tdc= addrow('From', null);
+			tdc.appendChild(createSearchLink(addr));
+			var tdc= addrow('To', null);
+			tdc.appendChild(createSearchLink('A' + String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
+			addrow('Value', jsondata[0][1]['op']['content']['op']['Transaction']['amount']);
+			addrow('Fee', jsondata[0][1]['op']['content']['fee']);
+			addrow('In pool', jsondata[0][1]['in_pool']);
+		// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
+		// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
+			addrow('Thread', xbqcrypto.get_address_thread(addr));
+		// 	addrow('Transaction Time', jsondata['txTime']);
+		}
+		catch(ex) {
+			div.innerHTML= '<span>' + 'Transaction not found in any block or pool' + '</span>';
+		}
+	}
+	else if (jsondata['what'][0] =='A') {
+
+		addheader('Address ' + String(jsondata['what']));
+		
+		var thread = xbqcrypto.get_address_thread(jsondata['what'])
+		addrow('Balance', jsondata[jsondata.what.slice(1)].final_ledger_data.balance);
 	// 	var transactions= jsondata['transactions'];
 	// 	for(var i= 0 ; i < transactions.length ; i++) {
 	// 		var tdc= addrow('Transaction', null);
@@ -364,12 +425,10 @@ explorerSetSearchTable= function(jsondata) {
 	// 	addrow('Active', jsondata['active'])
 	// 	addrow('Block count', jsondata['nBlocks'])
 	// 	addrow('Final blocks', jsondata['nFinalBlocks'])
-	// }
-	// else
-	// 	div.innerHTML= '<span>' + JSON.stringify(jsondata) + '</span>';
+	}
+	else
+		div.innerHTML= '<span>' + JSON.stringify(jsondata) + '</span>';
 }
-
-
 
 var explorerUpdateInfoXhr= null
 var explorerUpdateInfoTimeout= null
@@ -394,7 +453,7 @@ explorerUpdateInfo= function(first=true) {
 			explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 3000, false)
 		}
 	}
-	// explorerUpdateInfoXhr= RESTRequest("GET", 'explorerInfo', null, onresponse, onerror);
+	explorerUpdateInfoXhr= RESTRequest("GET", 'get_stats', null, onresponse, onerror);
 }
 
 
@@ -402,19 +461,21 @@ explorerSetInfo= function(jsondata) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
 
-	data= jsondata;
-	var d = new Date(1000 * data.lastReboot);
-	div.innerHTML= '<span>\
-	Last Reboot: <b>'+ d.toLocaleString() + '</b><br>\
-	Number of Blocks: <b>' + data.nBlocks + '</b><br>\
-	Number of Cliques: <b>' + data.nCliques + '</b><br>\
-	Block Throughput: <b>' + data.finalBps + ' b/s' + '</b><br>\
-	Transaction Throughput: <b>' + data.throughput + ' tx/s' + '</b><br>\
-	Block Stale Rate: <b>' + Math.round(data.staleRate * 100) / 100 + ' %' + '</b><br>\
-	Average Transaction Time: <b>' + Math.round(data.avgTimeTx * 10) / 10 + ' sec' + '</b><br>\
-	Total Stake: <b>' + data.totalStakes + '</b><br>\
-	Number of Stakers: <b>' + data.nStakers + '</b><br>\
+	data = jsondata;
+	// var d = new Date(1000 * data.timespan);
+	div.innerHTML = '<span>\
+	Number of final blocks: <b>' + data.final_block_count + '</b><br>\
+	Block Throughput: <b>' + data.final_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
+	Transaction Throughput: <b>' + data.final_operation_count / data.timespan * 1000 + ' tx/s' + '</b><br>\
+	Number of Cliques: <b>' + data.clique_count + '</b><br>\
+	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + 'b/s' + '</b><br>\
 	</span>';
+
+	// Time of Simulation: <b>' + data.timespan + '</b><br>\
+	// Block Throughput: <b>' + data.finalBps + ' b/s' + '</b><br>\
+	// Average Transaction Time: <b>' + Math.round(data.avgTimeTx * 10) / 10 + ' sec' + '</b><br>\
+	// Total Stake: <b>' + data.totalStakes + '</b><br>\
+	// Number of Stakers: <b>' + data.nStakers + '</b><br>\
 	
 	finished_loading('wallet_info');
 }
@@ -496,9 +557,6 @@ explorerGetViewInterval= function() {
 						}
 					}
             		lastblc.timestampParents.push(parentTimestamp)
-	            	// explorerPushParent(lastblc.timestampParents, lastblc.parents[j])
-
-	            	// console.log(parentTimestamp)
 	            }
 				
 				if(explorerViewLastBlockId != lastblc.blockId) {
@@ -680,27 +738,27 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		//Is the info present in the search results ?
 		if(explorerSearchResult != null) {
 			// TODO
-			// if(explorerSearchResult['type'] == 'block') {
-			if( String(explorerSearchResult['blockId']) == explorerViewSelId ) {
-				drawLinesToTimestamps = []
-				for (var i=0 ; i < nthreads ; i++) {
-					parentTimestamp = null
-	        		for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-							if (explorerSearchResult.header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
-								parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
-								// if (j == explorerSearchResult.header.content.slot['thread']) {
-								// console.log(i)
-								// console.log(parentTimestamp)
-								// }
+			if(explorerSearchResult['what'][0] == 'B' && explorerSearchResult['Active']) {
+				if( String(explorerSearchResult['what']) == explorerViewSelId ) {
+					drawLinesToTimestamps = []
+					for (var i=0 ; i < nthreads ; i++) {
+						parentTimestamp = null
+						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
+								if (explorerSearchResult.Active.header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
+									parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
+									// if (j == explorerSearchResult.header.content.slot['thread']) {
+									// console.log(i)
+									// console.log(parentTimestamp)
+									// }
+							}
 						}
+						drawLinesToTimestamps.push(parentTimestamp)
 					}
-	        		drawLinesToTimestamps.push(parentTimestamp)
-	        	}
 
-				drawLinesFromThread = parseInt(explorerSearchResult.header.content.slot['thread'])
-				drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerSearchResult.header.content.slot['period'] + explorerSearchResult.header.content.slot['thread']/nthreads) * explorerT0) / 1000
+					drawLinesFromThread = parseInt(explorerSearchResult.Active.header.content.slot['thread'])
+					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerSearchResult.Active.header.content.slot['period'] + explorerSearchResult.Active.header.content.slot['thread']/nthreads) * explorerT0) / 1000
+				}
 			}
-			// }
 		}
 
 		if(drawLinesFromThread != null && drawLinesFromTimestamp != null && drawLinesToTimestamps != null) {
@@ -731,9 +789,9 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		else if(status == 'Stale')
 			ctx.fillStyle = "#e82c2c";
 		else if(status == 'Active')
-			ctx.fillStyle = "#FF8C00";
-		else
 			ctx.fillStyle = "#0087e5";
+		else
+			ctx.fillStyle = "#FF8C00";
 		
 		var effSymSize= blocksymbolsize
 		if(selected)
