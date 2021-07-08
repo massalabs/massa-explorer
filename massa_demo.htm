@@ -14,7 +14,7 @@
     </head>
 
     <body>
-        <div id="loadingdiv" style="opacity: 0; display: none;"><div class="spinner"></div></div>
+        <div id="loadingdiv"><div class="spinner"></div></div>
         <header>Massa Live Demo</header>
         <nav>
             <div>
@@ -28,7 +28,7 @@
         </nav>
         <main>
             <!---  Explorer page -->
-            <section id="explorer_page" class="invisible" style="display: inline;">
+            <section id="explorer_page" class="invisible">
                 <h2 class="invisible">Explorer page</h2>
                 <article id="explorer_live">
                     <h2>Multithreaded Block DAG:</h2>
@@ -63,7 +63,7 @@
             </section>
 
             <!---  Wallet page -->
-            <section id="wallet_page" class="invisible" style="display: none;">
+            <section id="wallet_page" class="invisible">
                 <h2 class="invisible">Wallet page</h2>
 
                 <article id="wallet_info">
@@ -72,7 +72,7 @@
                     <div id="wallet_naddresses"></div>
                     <div>&nbsp;</div>
                     <div>
-                        <button id="wallet_save" style="display: none;">Save wallet</button><a class="invisible" id="wallet_dlanchor"></a>
+                        <button id="wallet_save">Save wallet</button><a class="invisible" id="wallet_dlanchor"></a>
                         <label class="labelbutton" id="wallet_load" for="wallet_loadf">Load wallet</label>
                         <input class="hiddenfloat" type="file" id="wallet_loadf" name="wallet_loadf" accept="application/json,.json">
                     </div>
@@ -100,7 +100,7 @@
                     <hr>
                     <h2>Generate transaction</h2>
                     <div class="messagediv"><span id="wallet_trans_progress">Add at least one address to send transactions.</span></div>
-                    <form id="trans_send" style="display: none;">
+                    <form id="trans_send">
                         <div>
                             <label for="sendfromaddr">From address:</label>
                             <select id="sendfromaddr" name="sendfromaddr" class="addressinput"></select>
@@ -124,10 +124,10 @@
             </section>
 
             <!---  staking page -->
-            <section id="staking_page" class="invisible" style="display: none;">
+            <section id="staking_page" class="invisible">
                 <h2 class="invisible">Staking page</h2>
 
-                <article id="staking_stakerlist" style="display: none;">
+                <article id="staking_stakerlist">
                     <h2>My simulated stakers</h2>
                     <div><table id="staking_stakertable"></table></div>
                 </article>
@@ -171,7 +171,7 @@
             </section>
 
             <!---  About page -->
-            <section id="about_page" class="invisible" style="display: none;">
+            <section id="about_page" class="invisible">
                 <article id="summary">
                     <h2 class="invisible">Summary</h2>
                     <p>
