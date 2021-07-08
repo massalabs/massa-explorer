@@ -191,9 +191,14 @@ explorerSearch= function(what, first=true) {
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
 
-		explorerSetSearchTable(resJson);
-		var statusdiv= document.getElementById('explorerSearchStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		if(what[0] != 'A') {
+			explorerSetSearchTable(resJson);
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		}
+		else
+			addressOperationsSearch(resJson)
+
 		explorerSearchXhr= null;
 		explorerSearchTimeout= setTimeout(explorerSearch, 10000, what, false)
 		
@@ -223,6 +228,41 @@ explorerSearch= function(what, first=true) {
 		explorerSearchXhr = RESTRequest("GET", 'get_operations?operation_ids[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
 	if(what[0] == 'A')
 		explorerSearchXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
+}
+
+var addressOperationsSearchXhr= null
+var addressOperationsSearchTimeout= null
+addressOperationsSearch = function(jsondata) {
+	// if(address == '') { explorerSearchClear(); return; }
+	if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
+	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
+	// var div = document.getElementById('explorerSearchResult');
+	// var statusdiv = document.getElementById('explorerSearchStatus');
+
+	// explorerViewSelId = address
+	
+	// if(first) {
+	// 	if(div) div.innerHTML= '';
+	// 	explorersearch= document.getElementById('explorersearch');
+	// 	if(explorersearch) { explorersearch.value= address; }
+	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
+	// }
+	function onresponse(resJson, xhr) {
+		// explorerSetAddressOperations(tab, resJson)
+		jsondata['operations'] = resJson
+		explorerSetSearchTable(jsondata)
+		var statusdiv= document.getElementById('explorerSearchStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+	}
+	function onerror(error, xhr) {
+		if(explorerSearchXhr != null) { 
+			explorerSearchXhr= null;
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			explorerSearchTimeout= setTimeout(explorerSearch, 1000, address, false)
+		}
+	}
+	explorerSearchXhr = RESTRequest("GET", 'operations_involving_address/'+encodeURIComponent(jsondata['what'].slice(1)), null, onresponse, onerror);
 }
 
 explorerSearchClear= function() {
@@ -258,8 +298,8 @@ explorerSetSearchTable= function(jsondata) {
 	var addheader= function(h) {
 		hth.appendChild(document.createTextNode(String(h)));
 	}
-	var addrow= function(field, content) {
-		var tr= document.createElement('TR');
+	var addrow = function(field, content) {
+		var tr = document.createElement('TR');
 		tab.appendChild(tr);
 		var td_field= document.createElement('TD');
 		td_field.classList.add('smalltd');
@@ -326,36 +366,6 @@ explorerSetSearchTable= function(jsondata) {
 		}
 	}
 	else if (jsondata['what'][0] =='T') {
-		
-		// [
-		//     [
-		//         "bLZQBhWo89EyJ6BfpE3smTEz4EvBn3mUdHzCXjte3uMAV8GQc",
-		//         {
-		//             "in_blocks": {
-		//                 "2gyRd59BfbtZTnF9ndpsNAXbiAjkxs54oD5Ckbza3LHXzroabR": [
-		//                     0,
-		//                     false
-		//                 ]
-		//             },
-		//             "in_pool": true,
-		//             "op": {
-		//                 "content": {
-		//                     "expire_period": 316403,
-		//                     "fee": 5342,
-		//                     "op": {
-		//                         "Transaction": {
-		//                             "amount": 12332,
-		//                             "recipient_address": "2d561cZd5KHZzHmwNWiBxSdosrty7MSrinVvQVSSGBNQyzCipq"
-		//                         }
-		//                     },
-		//                     "sender_public_key": "4vYrPNzUM8PKg2rYPW3ZnXPzy67j9fn5WsGCbnwAnk2Lf7jNHb"
-		//                 },
-		//                 "signature": "D4BxEkSehY4dX68mKcx5SvtfbUM3fhUdug3CF11GmCgfxwqdCay7NVLCmJswKZiwXvX3X2xnY2i2XJZTLuagGBBkMefi1"
-		//             }
-		//         }
-		//     ]
-		// ]
-
 		try {
 			addheader('Transaction ' + String(jsondata['what']))
 			var transactionInBlocks = jsondata[0][1]['in_blocks'];
@@ -380,8 +390,10 @@ explorerSetSearchTable= function(jsondata) {
 			tdc.appendChild(createSearchLink(addr));
 			var tdc= addrow('To', null);
 			tdc.appendChild(createSearchLink('A' + String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
-			addrow('Value', jsondata[0][1]['op']['content']['op']['Transaction']['amount']);
-			addrow('Fee', jsondata[0][1]['op']['content']['fee']);
+			var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount']).dividedBy(1e9)
+			addrow('Value', value);
+			var fee = new Decimal(jsondata[0][1]['op']['content']['fee']).dividedBy(1e9)
+			addrow('Fee', fee);
 			addrow('In pool', jsondata[0][1]['in_pool']);
 		// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
 		// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
@@ -398,11 +410,14 @@ explorerSetSearchTable= function(jsondata) {
 		
 		var thread = xbqcrypto.get_address_thread(jsondata['what'])
 		addrow('Balance', jsondata[jsondata.what.slice(1)].final_ledger_data.balance);
-	// 	var transactions= jsondata['transactions'];
-	// 	for(var i= 0 ; i < transactions.length ; i++) {
-	// 		var tdc= addrow('Transaction', null);
-	// 		tdc.appendChild(createSearchLink(String(transactions[i])));
-	// 	}
+		addrow('Thread', thread);
+
+		for (const [key, value] of Object.entries(jsondata['operations'])) {
+			var tdc = addrow('Transaction', null);
+			tdc.appendChild(createSearchLink('T' + String(key)));
+		}
+
+		// addressOperationsSearch(jsondata['what'], tab)
 	// 	var blocksWithStakerAddress= jsondata['blocksWithStakerAddress'];
 	// 	for(var i= 0 ; i < blocksWithStakerAddress.length ; i++) {
 	// 		var tdc= addrow('Block mined', null);
@@ -428,6 +443,39 @@ explorerSetSearchTable= function(jsondata) {
 	}
 	else
 		div.innerHTML= '<span>' + JSON.stringify(jsondata) + '</span>';
+}
+
+explorerSetAddressOperations = function(tab, jsondata) {
+	var addrow = function(field, content) {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field= document.createElement('TD');
+		td_field.classList.add('smalltd');
+		tr.appendChild(td_field);
+		td_field.appendChild(document.createTextNode(String(field)));
+		var td_content= document.createElement('TD');
+		td_content.classList.add('ellipsis');
+		tr.appendChild(td_content);
+		if(content != null)
+			td_content.appendChild(document.createTextNode(String(content)));
+		return td_content
+	}
+
+	var createSearchLink= function(target) {
+		a= document.createElement('A');
+		a.classList.add('keylink');
+		a.href= "#explorer?explore=" + encodeURIComponent(target);
+		a.appendChild(document.createTextNode(target))
+		return a;
+	}
+
+	console.log(jsondata)
+
+	for (const [key, value] of Object.entries(jsondata)) {
+		console.log(key, value);
+		var tdc = addrow('Transaction', null);
+		tdc.appendChild(createSearchLink('T' + String(key)));
+	}
 }
 
 var explorerUpdateInfoXhr= null

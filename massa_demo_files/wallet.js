@@ -44,7 +44,7 @@ walletInit= function() {
     wallet_sendamount.addEventListener("input", function() {
         wallet_sendamount.removeAttribute("aria-invalid");
     });
-    wallet_sendfee= document.getElementById('sendfee');
+    wallet_sendfee = document.getElementById('sendfee');
     wallet_sendfee.addEventListener("input", function() {
         wallet_sendfee.removeAttribute("aria-invalid");
     });
@@ -121,23 +121,25 @@ walletInit= function() {
         // validate amount
         var sendamount= null;
         try {
-            sendamount= parseInt(Math.round(Number(wallet_sendamount.value)));
+            // sendamount= parseInt(Math.round(Number(wallet_sendamount.value) * 1e9));
+            sendamount = new Decimal(wallet_sendamount.value).times(1e9);
             if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 47) - 1))
                 throw "Invalid amount.";
             wallet_sendamount.removeAttribute("aria-invalid");
-            wallet_sendamount.value= sendamount;
+            wallet_sendamount.value = sendamount.dividedBy(1e9);
         } catch(e) {
             sendamount= null;
             wallet_sendamount.setAttribute("aria-invalid", "true");
         }
         // validate fee
-        var sendfee= null;
+        var sendfee = null;
         try {
-            sendfee= parseInt(Math.round(Number(wallet_sendfee.value)));
+            // sendfee = parseInt(Math.round(Number(wallet_sendfee.value) * 1e9));
+            sendfee = new Decimal(wallet_sendfee.value).times(1e9);
             if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 24) - 1)))
                 throw "Invalid fee.";
             wallet_sendfee.removeAttribute("aria-invalid");
-            wallet_sendfee.value = sendfee;
+            wallet_sendfee.value = sendfee.dividedBy(1e9);
         } catch(e) {
             sendfee= null;
             wallet_sendfee.setAttribute("aria-invalid", "true");
@@ -150,8 +152,8 @@ walletInit= function() {
             var confirm_message= "Transaction summary:\n"
                 + "\tFrom: " +  sendfromaddr + "\n"
                 + "\tTo: " +  sendtoaddr + "\n"
-                + "\tAmount: " +  (sendamount) + " coins\n"
-                + "\tFee: " +  (sendfee) + " coins\n"
+                + "\tAmount: " +  (sendamount.dividedBy(1e9)) + " coins\n"
+                + "\tFee: " +  (sendfee.dividedBy(1e9)) + " coins\n"
                 + "\nPlease confirm this transaction.";
             everythingok= confirm(confirm_message);
         }
@@ -168,10 +170,10 @@ walletInit= function() {
                 var transac = {"content": {"op": {"Transaction": {}}}}
 
                 transac.content["sender_public_key"] = sendfromb58cpubkey.slice(3)
-                transac.content["fee"] = sendfee
+                transac.content["fee"] = parseInt(sendfee)
                 transac.content["expire_period"] = latest_period + 5
                 transac.content.op.Transaction["recipient_address"] = sendtoaddr.slice(1)
-                transac.content.op.Transaction["amount"] = sendamount
+                transac.content.op.Transaction["amount"] = parseInt(sendamount)
                 
                 var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey.slice(3)), 16)
                 transac["signature"] = sign_content(transac, privkey)
@@ -233,12 +235,7 @@ wallet_upload= function() {
         reader.onload = function(evt) {
             try {
                 var resobj = JSON.parse(evt.target.result);
-                if(resobj.magic !== 'blockclique_wallet')
-                    throw "Invalid magic.";
-                var version= resobj.version;
-                if(version !== "0")
-                    throw "Invalid wallet version.";
-                var privs= resobj.privkeys;
+                var privs= resobj;
                 var new_addrs= {};
                 for(var i= 0 ; i < privs.length ; i++) {
                     var reskey= parse_textprivkey(privs[i]);
@@ -272,9 +269,7 @@ wallet_download= function() {
         if(wallet_addrs.hasOwnProperty(k)) 
             resprivkeys.push(wallet_addrs[k].key.b58cprivkey);
     }
-    var resJSON= {'magic': 'blockclique_wallet',
-                  'version':'0',
-                  'privkeys':resprivkeys};
+    var resJSON= resprivkeys;
     var dlanchor= document.getElementById('wallet_dlanchor');
     var datastr= "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resJSON));
     dlanchor.setAttribute("href", datastr);
@@ -307,8 +302,10 @@ wallet_update_sendform= function() {
         var res_amount= wallet_addrs[k].balance;
         if(res_amount == null)
             res_amount = '...';
-        else
-            res_amount= res_amount.toString();
+        else {
+            res_amount = new Decimal(res_amount).dividedBy(1e9) 
+            res_amount = res_amount.toString();
+        }
         var delkeyid= 'wallet_delkey_' + k;
         var copykeyid= 'wallet_copykey_' + k;
         restabhtml += '<tr><td class="ellipsis"><div><a href="#explorer_search?explore=' + k + '" class="keylink">'
@@ -374,8 +371,8 @@ wallet_confirmquit= function() {
 }
 
 wallet_update_info= function() {
-    var totbalance= 0;
-    var naddr= 0;
+    var totbalance = 0;
+    var naddr = 0;
     for(var k in wallet_addrs) {
         if(!wallet_addrs.hasOwnProperty(k)) 
             continue;
@@ -390,6 +387,10 @@ wallet_update_info= function() {
     }
     if(totbalance == null)
         totbalance= 'Loading...';
+    else {
+        totbalance = new Decimal(totbalance).dividedBy(1e9);
+        totbalance.toString()
+    }
     wallet_empty= (naddr == 0);
     window.onbeforeunload = (wallet_empty ? null : wallet_confirmquit);
     
@@ -451,11 +452,17 @@ walletUpdateBalancesInfo= function() {
                 continue;
             for (var k in wallet_addrs) {
                 // var thread = wallet_addrs[k].key.thread
-                wallet_addrs[k].balance = parseFloat(resJson[k.substring(1)].final_ledger_data.balance);
-                var balancefield= document.getElementById('wallet_balance_'+k);
+                // wallet_addrs[k].balance = parseFloat(resJson[k.substring(1)].final_ledger_data.balance);
+                wallet_addrs[k].balance = new Decimal(resJson[k.substring(1)].final_ledger_data.balance).dividedBy(1e9).toString();
+                wallet_addrs[k].candidate_balance = new Decimal(resJson[k.substring(1)].candidate_ledger_data.balance).dividedBy(1e9).toString();
+                var balancefield = document.getElementById('wallet_balance_'+k);
                 if(!balancefield)
                     continue;
-                balancefield.innerHTML= wallet_addrs[k].balance;
+                if (wallet_addrs[k].balance == wallet_addrs[k].candidate_balance) {
+                    balancefield.innerHTML = wallet_addrs[k].balance;
+                }
+                else
+                    balancefield.innerHTML = wallet_addrs[k].balance + '<br>(' + wallet_addrs[k].candidate_balance + ')';
             }
 		}
 		wallet_update_info();
@@ -480,4 +487,3 @@ walletUpdateBalancesInfo= function() {
         // walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_data?addrs[0]=2oxLZc6g6EHfc5VtywyPttEeGDxWq3xjvTNziayWGDfxETZVTi&' + reqval, null, onresponse, onerror);
         walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_info' + reqval, null, onresponse, onerror);
 }
-

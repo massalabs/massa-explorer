@@ -1,4 +1,4 @@
-pages= ['explorer', 'wallet', 'about'];
+pages= ['explorer', 'wallet', 'staking', 'about'];
 defaultpage= 'explorer';
 loading_status= {};
 loading_finished= false;

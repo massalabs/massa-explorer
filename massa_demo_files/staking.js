@@ -1,7 +1,6 @@
 staking_stakerlist= [];
 staking_creatingstaker= false;
 staking_maxpower=null;
-
 stakingProcessCommands= function(pageid, cmds) {
     if(pageid == 'staking') {
         stakingUpdateInfos();
@@ -173,37 +172,6 @@ stakingDisplayCreatestaker= function() {
     }
 }
 
-var stakingUpdateInfosXhr= null
-var stakingUpdateInfosTimeout= null
-stakingUpdateInfos= function() {
-	if(stakingUpdateInfosTimeout != null) { clearTimeout(stakingUpdateInfosTimeout); stakingUpdateInfosTimeout=null; }
-	if(stakingUpdateInfosXhr != null) { var tmp=stakingUpdateInfosXhr; stakingUpdateInfosXhr=null; tmp.abort(); }
-
-	function onresponse(resJson, xhr) {
-		stakingUpdateInfosXhr= null;
-		try {
-		    stakingApplyInfos(resJson);
-		    finished_loading('staking_maxinfo');
-		    stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 10000, false);
-		} catch(e) {
-		    staking_infostatus.innerHTML= "Error getting infos. Retrying...";
-		    staking_infostatus.style.color='red';
-		    stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 3000, false);
-		}
-	}
-	function onerror(error, xhr) {
-		if(stakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-		    staking_infostatus.innerHTML= "Error getting infos. Retrying...";
-		    staking_infostatus.style.color='red';
-			stakingUpdateInfosXhr= null;
-			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 3000, false);
-		}
-	}
-	stakingUpdateInfosXhr= RESTRequest("GET", 'staker_info', null, onresponse, onerror);
-}
-
-
-
 var stakingCreatestakerXhr= null;
 var stakingCreatestakerTimeout= null;
 stakingCreatestaker= function(data) {
@@ -238,3 +206,112 @@ stakingCreatestaker= function(data) {
 	walletSendTransactionXhr= RESTRequest("PUT", 'createStaker', data, onresponse, onerror);
 }
 
+stakingInfoResult = null
+stakingInfoSetTable = function(jsondata) {
+	stakingInfoResult = jsondata
+	var div = document.getElementById('stakingInfoResult');
+	if (!div) return;
+	div.innerHTML= '';
+	var tab = document.createElement('TABLE');
+	div.appendChild(tab);
+    var htr = document.createElement('TR');
+	tab.appendChild(htr);
+	var hth1 = document.createElement('TH');
+	htr.appendChild(hth1);
+    var hth2 = document.createElement('TH');
+	htr.appendChild(hth2);
+    var hth3 = document.createElement('TH');
+	htr.appendChild(hth3);
+	// hth.colSpan = 2;
+	hth1.classList.add('ellipsis');
+    hth2.classList.add('ellipsis');
+    hth3.classList.add('ellipsis');
+    hth1.appendChild(document.createTextNode('Address'));
+    hth2.appendChild(document.createTextNode('Rolls'));
+    hth3.appendChild(document.createTextNode('% of Rolls'));
+
+	// var addheader= function(h) {
+	// 	hth.appendChild(document.createTextNode(String(h)));
+	// }
+
+	var addrow= function(field, content1, content2) {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field = document.createElement('TD');
+		td_field.classList.add('keylink');
+		tr.appendChild(td_field);
+		td_field.appendChild(field);
+		var td_content= document.createElement('TD');
+		td_content.classList.add('ellipsis');
+		tr.appendChild(td_content);
+        td_content.appendChild(document.createTextNode(String(content1)));
+        var td_content= document.createElement('TD');
+		td_content.classList.add('ellipsis');
+		tr.appendChild(td_content);
+        td_content.appendChild(document.createTextNode(String(content2)));
+		return td_content
+	}
+
+	var createSearchLink = function(target) {
+		a = document.createElement('A');
+		a.classList.add('keylink');
+		a.href= "#explorer?explore=" + encodeURIComponent(target);
+		a.appendChild(document.createTextNode(target))
+		return a;
+	}
+
+    // Create items array
+    var items = Object.keys(jsondata).map(function(key) {
+    return [key, jsondata[key]];
+    });
+    
+    // Sort the array based on the second element
+    items.sort(function(first, second) {
+    return second[1] - first[1];
+    });
+
+    var totstakers = 0
+    var totrolls = 0
+    items.forEach(function (item, index) {
+        totstakers = index
+        totrolls += item[1]
+    });
+    totstakers += 1
+
+    items.forEach(function (item, index) {
+        if (index<500) {
+            addrow(createSearchLink('A' + item[0]), item[1], item[1] / totrolls * 100)
+        }
+    });
+
+    document.getElementById('staking_totstakers').innerHTML= 'Number of stakers:&nbsp;<b>' + totstakers;
+    document.getElementById('staking_totrolls').innerHTML= 'Number of rolls:&nbsp;<b>' + totrolls + '</b>';
+}
+
+var stakingUpdateInfosXhr= null
+var stakingUpdateInfosTimeout= null
+stakingUpdateInfos = function(first=false) {
+	if(stakingUpdateInfosTimeout != null) { clearTimeout(stakingUpdateInfosTimeout); stakingUpdateInfosTimeout=null; }
+	if(stakingUpdateInfosXhr != null) { var tmp=stakingUpdateInfosXhr; stakingUpdateInfosXhr=null; tmp.abort(); }
+	var statusdiv= document.getElementById('stakerInfoStatus');
+	if(first && statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading infos...'; }
+
+	function onresponse(resJson, xhr) {
+        stakingInfoSetTable(resJson);
+		// explorerSetInfo(resJson);
+		var statusdiv = document.getElementById('stakerSearchStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		stakingUpdateInfosXhr = null;
+		stakingUpdateInfosTimeout = setTimeout(stakingUpdateInfos, 10000, false)
+	}
+	function onerror(error, xhr) {
+		if(stakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
+			stakingUpdateInfosXhr= null;
+			var statusdiv= document.getElementById('stakerInfoStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
+			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 3000, false)
+		}
+	}
+	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+}
+stakingUpdateInfos(first=true)
