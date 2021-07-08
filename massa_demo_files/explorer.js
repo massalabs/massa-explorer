@@ -512,13 +512,13 @@ explorerSetInfo= function(jsondata) {
 	data = jsondata;
 	// var d = new Date(1000 * data.timespan);
 	div.innerHTML = '<span>\
-	Number of final blocks: <b>' + data.final_block_count + '</b><br>\
 	Block Throughput: <b>' + data.final_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
 	Transaction Throughput: <b>' + data.final_operation_count / data.timespan * 1000 + ' tx/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
 	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + 'b/s' + '</b><br>\
 	</span>';
 
+	// Number of final blocks: <b>' + data.final_block_count + '</b><br>\
 	// Time of Simulation: <b>' + data.timespan + '</b><br>\
 	// Block Throughput: <b>' + data.finalBps + ' b/s' + '</b><br>\
 	// Average Transaction Time: <b>' + Math.round(data.avgTimeTx * 10) / 10 + ' sec' + '</b><br>\

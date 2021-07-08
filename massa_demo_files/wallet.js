@@ -318,9 +318,9 @@ wallet_update_sendform= function() {
     if(othercombobox == null)
         othercombobox= document.getElementById('miner_address');
     var prevcombosel= combobox.value;
-    var prevothercombosel= othercombobox.value;
+    // var prevothercombosel= othercombobox.value;
     combobox.innerHTML= rescombohtml;
-    othercombobox.innerHTML= rescombohtml;
+    // othercombobox.innerHTML= rescombohtml;
     if(rescombohtml == '') {
         wallet_addrtable.innerHTML= '';
         document.getElementById('trans_send').style.display= "none";
@@ -340,8 +340,8 @@ wallet_update_sendform= function() {
     }
     if(wallet_addrs.hasOwnProperty(prevcombosel))
         combobox.value= prevcombosel;
-    if(wallet_addrs.hasOwnProperty(prevothercombosel))
-        othercombobox.value= prevothercombosel;
+    // if(wallet_addrs.hasOwnProperty(prevothercombosel))
+    //     othercombobox.value = prevothercombosel;
     
     for(var k in wallet_addrs) {
         if(!wallet_addrs.hasOwnProperty(k))

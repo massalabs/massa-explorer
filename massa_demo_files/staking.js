@@ -11,38 +11,38 @@ stakingProcessCommands= function(pageid, cmds) {
     }
 }
 
-stakingInit= function() {
-    staking_stakerlistarea= document.getElementById('staking_stakerlist');
-    staking_stakertable= document.getElementById('staking_stakertable');
-    staking_create_staker_form= document.getElementById('create_staker_form');
-    staking_createstaker_progress= document.getElementById('staking_createstaker_progress');
-    staking_infostatus= document.getElementById('stakingInfoStatus');
-    staking_info= document.getElementById('stakingInfo');
-    staker_duration= document.getElementById('staker_duration');
-    staker_duration.addEventListener("input", function() {
-        staker_duration.removeAttribute("aria-invalid");
-    });
-    staker_power= document.getElementById('staker_power');
-    staker_power.addEventListener("input", function() {
-        staker_power.removeAttribute("aria-invalid");
-    });
-    staker_address= document.getElementById('staker_address');
-    staker_address.addEventListener("input", function() {
-        staker_address.removeAttribute("aria-invalid");
-    });
-    staker_bandwidth= document.getElementById('staker_bandwidth');
-    staker_bandwidth.addEventListener("input", function() {
-        staker_bandwidth.removeAttribute("aria-invalid");
-    });
-    staking_create_staker_form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        staking_new_staker_submit();
-    }, false);
-    stakingDisplayList();
-    stakingUpdateInfos();
-    stakingDisplayCreatestaker();
-    finished_loading('staking_init');
-}
+// stakingInit= function() {
+//     staking_stakerlistarea= document.getElementById('staking_stakerlist');
+//     staking_stakertable= document.getElementById('staking_stakertable');
+//     staking_create_staker_form= document.getElementById('create_staker_form');
+//     staking_createstaker_progress= document.getElementById('staking_createstaker_progress');
+//     staking_infostatus= document.getElementById('stakingInfoStatus');
+//     staking_info= document.getElementById('stakingInfo');
+//     staker_duration= document.getElementById('staker_duration');
+//     staker_duration.addEventListener("input", function() {
+//         staker_duration.removeAttribute("aria-invalid");
+//     });
+//     staker_power= document.getElementById('staker_power');
+//     staker_power.addEventListener("input", function() {
+//         staker_power.removeAttribute("aria-invalid");
+//     });
+//     staker_address= document.getElementById('staker_address');
+//     staker_address.addEventListener("input", function() {
+//         staker_address.removeAttribute("aria-invalid");
+//     });
+//     staker_bandwidth= document.getElementById('staker_bandwidth');
+//     staker_bandwidth.addEventListener("input", function() {
+//         staker_bandwidth.removeAttribute("aria-invalid");
+//     });
+//     staking_create_staker_form.addEventListener("submit", function(e) {
+//         e.preventDefault();
+//         staking_new_staker_submit();
+//     }, false);
+//     stakingDisplayList();
+//     stakingUpdateInfos();
+//     stakingDisplayCreatestaker();
+//     finished_loading('staking_init');
+// }
 
 staking_new_staker_submit= function() {
     // validate staker duration

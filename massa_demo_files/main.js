@@ -13,7 +13,7 @@ finished_loading= function(modulename) {
             if(loading_status[mname] === true)
                 nloaded += 1;
     }
-    if(nloaded < 6)
+    if(nloaded < 3)
         return;
     loading_finished= true;
 	document.getElementById('loadingdiv').style.opacity= "0";
@@ -28,7 +28,7 @@ processCommands= function(pageid, cmds) {
 initPages= function() {
 	explorerInit();
 	walletInit();
-	stakingInit();
+	// stakingInit();
 }
 
 
