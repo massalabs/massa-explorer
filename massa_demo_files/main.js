@@ -13,7 +13,7 @@ finished_loading= function(modulename) {
             if(loading_status[mname] === true)
                 nloaded += 1;
     }
-    if(nloaded < 7)
+    if(nloaded < 6)
         return;
     loading_finished= true;
 	document.getElementById('loadingdiv').style.opacity= "0";
