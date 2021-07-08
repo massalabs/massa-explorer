@@ -34,7 +34,7 @@ initPages= function() {
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
-	var url= "http://127.0.0.1:3030/api/v1/"+resource;
+	var url= "http://test.massa.net/api/v1/"+resource;
 
 	console.log(url)
 
