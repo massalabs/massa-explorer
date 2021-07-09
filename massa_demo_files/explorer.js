@@ -408,8 +408,9 @@ explorerSetSearchTable= function(jsondata) {
 
 		addheader('Address ' + String(jsondata['what']));
 		
+		var balance = new Decimal(jsondata[jsondata.what.slice(1)].final_ledger_data.balance).dividedBy(1e9)
+		addrow('Balance', balance);
 		var thread = xbqcrypto.get_address_thread(jsondata['what'])
-		addrow('Balance', jsondata[jsondata.what.slice(1)].final_ledger_data.balance);
 		addrow('Thread', thread);
 
 		for (const [key, value] of Object.entries(jsondata['operations'])) {

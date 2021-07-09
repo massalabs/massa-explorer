@@ -379,7 +379,7 @@ wallet_update_info= function() {
         naddr += 1;
         if(totbalance == null)
             continue
-        var tmpb= wallet_addrs[k].balance;
+        var tmpb = wallet_addrs[k].balance;
         if(tmpb == null)
             totbpance= null;
         else
@@ -388,8 +388,8 @@ wallet_update_info= function() {
     if(totbalance == null)
         totbalance= 'Loading...';
     else {
-        totbalance = new Decimal(totbalance).dividedBy(1e9);
-        totbalance.toString()
+        totbalance = totbalance;
+        // totbalance.toString()
     }
     wallet_empty= (naddr == 0);
     window.onbeforeunload = (wallet_empty ? null : wallet_confirmquit);
