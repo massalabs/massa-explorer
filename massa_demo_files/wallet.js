@@ -134,6 +134,9 @@ walletInit= function() {
         // validate fee
         var sendfee = null;
         try {
+            // if(wallet_sendfee.value == "") {
+            //     wallet_sendfee.value = "0.00001";
+            // }
             // sendfee = parseInt(Math.round(Number(wallet_sendfee.value) * 1e9));
             sendfee = new Decimal(wallet_sendfee.value).times(1e9);
             if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 24) - 1)))
