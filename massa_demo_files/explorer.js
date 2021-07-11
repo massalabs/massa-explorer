@@ -829,25 +829,24 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		//Is the info present in the search results ?
 		if(explorerSearchResult != null) {
 			// TODO
-			if(explorerSearchResult['what'][0] == 'B' && explorerSearchResult['Active']) {
-				if( String(explorerSearchResult['what']) == explorerViewSelId ) {
+			if(explorerSearchResult['what'][0] == 'B' && (explorerSearchResult['Active'] || explorerSearchResult['Stored'])) {
+				if(explorerSearchResult['Active'])
+					var status = 'Active'
+				else
+					var status = 'Stored'
+				if(String(explorerSearchResult['what']) == explorerViewSelId ) {
 					drawLinesToTimestamps = []
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-								if (explorerSearchResult.Active.header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
+								if (explorerSearchResult[status].header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
 									parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
-									// if (j == explorerSearchResult.header.content.slot['thread']) {
-									// console.log(i)
-									// console.log(parentTimestamp)
-									// }
+									drawLinesToTimestamps.push(parentTimestamp)
 							}
 						}
-						drawLinesToTimestamps.push(parentTimestamp)
 					}
-
-					drawLinesFromThread = parseInt(explorerSearchResult.Active.header.content.slot['thread'])
-					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerSearchResult.Active.header.content.slot['period'] + explorerSearchResult.Active.header.content.slot['thread']/nthreads) * explorerT0) / 1000
+					drawLinesFromThread = parseInt(explorerSearchResult[status].header.content.slot['thread'])
+					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerSearchResult[status].header.content.slot['period'] + explorerSearchResult[status].header.content.slot['thread']/nthreads) * explorerT0) / 1000
 				}
 			}
 		}
