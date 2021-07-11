@@ -336,6 +336,7 @@ explorerSetSearchTable= function(jsondata) {
 			// 		tdc.appendChild(createSearchLink(stakerAddr))
 			// 	}
 			// }
+			addrow('Status', 'Active')
 			addrow('Creator', jsondata.Active.header.content['creator'])
 			addrow('Thread', jsondata.Active.header.content.slot['thread'])
 			addrow('Generation', jsondata.Active.header.content.slot['period'])
@@ -361,8 +362,47 @@ explorerSetSearchTable= function(jsondata) {
 				tdc.appendChild(createSearchLink(String(parentIds[i])));
 			}
 		}
+		else if (jsondata['Stored']) {
+			// addheader('Block');
+			// if(String(jsondata['stakerId']) == 'Genesis')
+			// 	addrow('Staker ID', 'Genesis');
+			// else {
+			// 	var tdc= addrow('Staker ID', null);
+			// 	tdc.appendChild(createSearchLink(String(jsondata['stakerId'])))
+			// 	var stakerAddr= String(jsondata.header.content['creator'])
+			// 	if(stakerAddr != 'None') {
+			// 		var tdc= addrow('Staker address', null)
+			// 		tdc.appendChild(createSearchLink(stakerAddr))
+			// 	}
+			// }
+			addrow('Status', 'Stored')
+			addrow('Creator', jsondata.Stored.header.content['creator'])
+			addrow('Thread', jsondata.Stored.header.content.slot['thread'])
+			addrow('Generation', jsondata.Stored.header.content.slot['period'])
+			// addrow('Reward', jsondata['reward'])
+			// addrow('Priority', jsondata['priority'])
+			// addrow('Protocol seed', jsondata['protocolSeed'])
+			// var tmpts= new Date(1000 * Number(jsondata['timestamp']))
+			// addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
+			addrow('Signature', jsondata.Stored.header['signature'])
+			
+			// addrow('Tx count', String(jsondata['numberOfTransactions']))
+			var operations = jsondata.Stored.operations;
+			for(var i= 0 ; i < operations.length ; i++) {
+				var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tdc= addrow('Transaction', null)
+				tdc.appendChild(createSearchLink('T' + String(tx_id)));
+			}
+			
+			parentIds = jsondata.Stored.header.content['parents'];
+			for(var i= 0 ; i < parentIds.length ; i++) {
+				var tdc= addrow('Parent (thread ' + i + ')', null)
+				tdc.appendChild(createSearchLink(String(parentIds[i])));
+			}
+		}
 		else if (jsondata['Discarded']) {
-			addrow('Discarded', jsondata.Discarded)
+			addrow('Status', 'Discarded (' + jsondata.Discarded + ')')
 		}
 	}
 	else if (jsondata['what'][0] =='T') {
@@ -409,7 +449,9 @@ explorerSetSearchTable= function(jsondata) {
 		addheader('Address ' + String(jsondata['what']));
 		
 		var balance = new Decimal(jsondata[jsondata.what.slice(1)].final_ledger_data.balance).dividedBy(1e9)
-		addrow('Balance', balance);
+		addrow('Final balance', balance);
+		var candidate_balance = new Decimal(jsondata[jsondata.what.slice(1)].candidate_ledger_data.balance).dividedBy(1e9)
+		addrow('Candidate balance', candidate_balance);
 		var thread = xbqcrypto.get_address_thread(jsondata['what'])
 		addrow('Thread', thread);
 
