@@ -337,9 +337,10 @@ explorerSetSearchTable= function(jsondata) {
 			// 	}
 			// }
 			addrow('Status', 'Active')
-			addrow('Creator', jsondata.Active.header.content['creator'])
+			var tdc = addrow('Creator', null)
+			tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Active.header.content['creator']))))
 			addrow('Thread', jsondata.Active.header.content.slot['thread'])
-			addrow('Generation', jsondata.Active.header.content.slot['period'])
+			addrow('Period', jsondata.Active.header.content.slot['period'])
 			// addrow('Reward', jsondata['reward'])
 			// addrow('Priority', jsondata['priority'])
 			// addrow('Protocol seed', jsondata['protocolSeed'])
@@ -376,9 +377,10 @@ explorerSetSearchTable= function(jsondata) {
 			// 	}
 			// }
 			addrow('Status', 'Stored')
-			addrow('Creator', jsondata.Stored.header.content['creator'])
+			var tdc = addrow('Creator', null)
+			tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Stored.header.content['creator']))))
 			addrow('Thread', jsondata.Stored.header.content.slot['thread'])
-			addrow('Generation', jsondata.Stored.header.content.slot['period'])
+			addrow('Period', jsondata.Stored.header.content.slot['period'])
 			// addrow('Reward', jsondata['reward'])
 			// addrow('Priority', jsondata['priority'])
 			// addrow('Protocol seed', jsondata['protocolSeed'])

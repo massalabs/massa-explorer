@@ -123,7 +123,7 @@ walletInit= function() {
         try {
             // sendamount= parseInt(Math.round(Number(wallet_sendamount.value) * 1e9));
             sendamount = new Decimal(wallet_sendamount.value).times(1e9);
-            if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 47) - 1))
+            if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 64) - 1))
                 throw "Invalid amount.";
             wallet_sendamount.removeAttribute("aria-invalid");
             wallet_sendamount.value = sendamount.dividedBy(1e9);
@@ -134,12 +134,12 @@ walletInit= function() {
         // validate fee
         var sendfee = null;
         try {
-            // if(wallet_sendfee.value == "") {
-            //     wallet_sendfee.value = "0.00001";
-            // }
+            if(wallet_sendfee.value == "") {
+                wallet_sendfee.value = 0;
+            }
             // sendfee = parseInt(Math.round(Number(wallet_sendfee.value) * 1e9));
             sendfee = new Decimal(wallet_sendfee.value).times(1e9);
-            if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 24) - 1)))
+            if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 64) - 1)))
                 throw "Invalid fee.";
             wallet_sendfee.removeAttribute("aria-invalid");
             wallet_sendfee.value = sendfee.dividedBy(1e9);
