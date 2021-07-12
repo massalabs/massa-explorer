@@ -843,7 +843,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
 								if (explorerSearchResult[status].header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
 									parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
-									drawLinesToTimestamps.push(parentTimestamp)
+									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
 					}
@@ -854,12 +854,13 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		}
 
 		if(drawLinesFromThread != null && drawLinesFromTimestamp != null && drawLinesToTimestamps != null) {
-			var startypos= threadys[drawLinesFromThread]
-			var startxpos= canvw*(drawLinesFromTimestamp-viewStart)/explorerViewTimespan;
+			var startypos = threadys[drawLinesFromThread]
+			var startxpos = canvw*(drawLinesFromTimestamp-viewStart)/explorerViewTimespan;
 			ctx.beginPath();
-			for(var threadi= 0 ; threadi < nthreads ; threadi++) {
-				var endypos= threadys[threadi]
-				var endxpos= canvw*(drawLinesToTimestamps[threadi]-viewStart)/explorerViewTimespan;
+			for(var parenti= 0 ; parenti < drawLinesToTimestamps.length ; parenti++) {
+				threadi = drawLinesToTimestamps[parenti][0]
+				var endypos = threadys[threadi]
+				var endxpos = canvw*(drawLinesToTimestamps[parenti][1]-viewStart)/explorerViewTimespan;
 				// TODO : don't draw if to far
 				explorerAutoLine(ctx, startxpos, startypos, endxpos, endypos, blocksymbolsize*2);
 			}
