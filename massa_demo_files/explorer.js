@@ -532,9 +532,10 @@ explorerUpdateInfo= function(first=true) {
 	if(first && statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading infos...'; }
 
 	function onresponse(resJson, xhr) {
-		explorerSetInfo(resJson);
-		var statusdiv= document.getElementById('explorerInfoStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		explorerStakingUpdateInfos(resJson)
+		// explorerSetInfo(resJson);
+		// var statusdiv= document.getElementById('explorerInfoStatus');
+		// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 		explorerUpdateInfoXhr= null;
 		explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 3000, false)
 	}
@@ -549,18 +550,62 @@ explorerUpdateInfo= function(first=true) {
 	explorerUpdateInfoXhr= RESTRequest("GET", 'get_stats', null, onresponse, onerror);
 }
 
+var explorerStakingUpdateInfosXhr = null
+explorerStakingUpdateInfos = function(jsondata) {
+	function onresponse(resJson, xhr) {
+		jsondata['stakers'] = resJson
+        explorerSetInfo(jsondata);
+		var statusdiv= document.getElementById('explorerInfoStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+	}
+	function onerror(error, xhr) {
+		if(explorerStakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
+			explorerStakingUpdateInfosXhr = null;
+			var statusdiv= document.getElementById('explorerInfoStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
+		}
+	}
+	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+}
 
 explorerSetInfo= function(jsondata) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
 
+	// Create items array
+    var items = Object.keys(jsondata['stakers']).map(function(key) {
+	return [key, jsondata['stakers'][key]];
+	});
+	// Sort the array based on the second element
+	items.sort(function(first, second) {
+	return second[1] - first[1];
+	});
+	var totstakers = 0
+	var totrolls = 0
+	items.forEach(function (item, index) {
+		totstakers += 1
+		totrolls += item[1]
+	});
+
+	var date = new Date(explorerGenesisTimestamp);
+	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  	var year = date.getFullYear();
+  	var month = months[date.getMonth()];
+  	var day = date.getDate();
+	var hours = date.getHours();
+	var minutes = "0" + date.getMinutes();
+	var seconds = "0" + date.getSeconds();
+	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
 	data = jsondata;
-	// var d = new Date(1000 * data.timespan);
 	div.innerHTML = '<span>\
+	Last Reboot: <b>' + formattedTime + '</b><br>\
 	Block Throughput: <b>' + data.final_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
 	Transaction Throughput: <b>' + data.final_operation_count / data.timespan * 1000 + ' tx/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
-	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + 'b/s' + '</b><br>\
+	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
+	Number of Stakers: <b>' + totstakers + '</b><br>\
+	Number of Rolls: <b>' + totrolls + '</b><br>\
 	</span>';
 
 	// Number of final blocks: <b>' + data.final_block_count + '</b><br>\

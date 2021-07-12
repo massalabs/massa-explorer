@@ -298,7 +298,6 @@ stakingUpdateInfos = function(first=false) {
 
 	function onresponse(resJson, xhr) {
         stakingInfoSetTable(resJson);
-		// explorerSetInfo(resJson);
 		var statusdiv = document.getElementById('stakerSearchStatus');
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 		stakingUpdateInfosXhr = null;
