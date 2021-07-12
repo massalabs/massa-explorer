@@ -188,6 +188,7 @@ explorerSearch= function(what, first=true) {
 		if(explorersearch) { explorersearch.value= what; }
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
 	}
+
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
 
@@ -202,15 +203,18 @@ explorerSearch= function(what, first=true) {
 		explorerSearchXhr= null;
 		explorerSearchTimeout= setTimeout(explorerSearch, 10000, what, false)
 		
-		// TODO
-		// if(isBlock && explorerViewSelCenter) {
+		if(isBlock && explorerViewSelCenter) {
 		// 	if(resJson.type == 'block') {
 		// 		explorerViewSelId= String(resJson.blockId)
-		// 		explorerViewEnd= parseFloat(resJson.timestamp) + explorerViewTimespan/2;
-		// 		document.getElementById('explorer_livescroll').checked= false;
-		// 		explorerViewScrolling= false;
+			if(resJson['Active'])
+				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Active.header.content.slot.period + resJson.Active.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
+			else if(resJson['Stored'])
+				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Stored.header.content.slot.period + resJson.Stored.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
+			// explorerViewEnd= parseFloat(resJson.timestamp) + explorerViewTimespan/2;
+			document.getElementById('explorer_livescroll').checked= false;
+			explorerViewScrolling= false;
 		// 	}
-		// }
+		}
 
 		explorerViewSelCenter= false
 	}
@@ -360,7 +364,7 @@ explorerSetSearchTable= function(jsondata) {
 			parentIds = jsondata.Active.header.content['parents'];
 			for(var i= 0 ; i < parentIds.length ; i++) {
 				var tdc= addrow('Parent (thread ' + i + ')', null)
-				tdc.appendChild(createSearchLink(String(parentIds[i])));
+				tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
 			}
 		}
 		else if (jsondata['Stored']) {
@@ -400,7 +404,7 @@ explorerSetSearchTable= function(jsondata) {
 			parentIds = jsondata.Stored.header.content['parents'];
 			for(var i= 0 ; i < parentIds.length ; i++) {
 				var tdc= addrow('Parent (thread ' + i + ')', null)
-				tdc.appendChild(createSearchLink(String(parentIds[i])));
+				tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
 			}
 		}
 		else if (jsondata['Discarded']) {
@@ -462,7 +466,7 @@ explorerSetSearchTable= function(jsondata) {
 			tdc.appendChild(createSearchLink('T' + String(key)));
 		}
 
-		// addressOperationsSearch(jsondata['what'], tab)
+	// addressOperationsSearch(jsondata['what'], tab)
 	// 	var blocksWithStakerAddress= jsondata['blocksWithStakerAddress'];
 	// 	for(var i= 0 ; i < blocksWithStakerAddress.length ; i++) {
 	// 		var tdc= addrow('Block mined', null);
@@ -750,6 +754,9 @@ explorerGetViewInterval= function() {
 	else
 		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
 
+	// Rounding for cache
+	viewStart = Math.floor(viewStart/500) * 500
+	viewEnd = Math.floor(viewEnd/500) * 500
 	explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_interval?start='+encodeURIComponent(viewStart)+'&end='+encodeURIComponent(viewEnd), null, onresponse, onerror);
 }
 
@@ -876,7 +883,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		//Is the info present in the search results ?
 		if(explorerSearchResult != null) {
 			// TODO
-			if(explorerSearchResult['what'][0] == 'B' && (explorerSearchResult['Active'] || explorerSearchResult['Stored'])) {
+			if(explorerSearchResult['what'][0] == 'B' && (explorerSearchResult['Active'] || explorerSearchResult['Stored']) && explorerGetViewIntervalResult != null) {
 				if(explorerSearchResult['Active'])
 					var status = 'Active'
 				else
