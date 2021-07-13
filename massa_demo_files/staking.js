@@ -280,7 +280,7 @@ stakingInfoSetTable = function(jsondata) {
 
     items.forEach(function (item, index) {
         if (index<500) {
-            addrow(createSearchLink('A' + item[0]), item[1], item[1] / totrolls * 100)
+            addrow(createSearchLink(item[0]), item[1], item[1] / totrolls * 100)
         }
     });
 

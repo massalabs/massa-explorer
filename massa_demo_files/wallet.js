@@ -172,13 +172,13 @@ walletInit= function() {
 
                 var transac = {"content": {"op": {"Transaction": {}}}}
 
-                transac.content["sender_public_key"] = sendfromb58cpubkey.slice(3)
+                transac.content["sender_public_key"] = sendfromb58cpubkey
                 transac.content["fee"] = parseInt(sendfee)
                 transac.content["expire_period"] = latest_period + 5
-                transac.content.op.Transaction["recipient_address"] = sendtoaddr.slice(1)
+                transac.content.op.Transaction["recipient_address"] = sendtoaddr
                 transac.content.op.Transaction["amount"] = parseInt(sendamount)
                 
-                var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey.slice(3)), 16)
+                var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey), 16)
                 transac["signature"] = sign_content(transac, privkey)
             } catch(e) { alert('Error while generating transaction: ' + e); }
         }
@@ -415,7 +415,7 @@ walletSendTransaction= function(data) {
         if(Array.isArray(resJson)) {
             document.getElementById('trans_send').reset();
             alert('Transaction was successfully sent:\n' + resJson[0]);
-            openhash('#explorer?explore=T' + encodeURIComponent(resJson[0]));
+            openhash('#explorer?explore=' + encodeURIComponent(resJson[0]));
         }
         else {
 		    alert('An error occured while sending the transaction. Transaction not sent.');
@@ -454,10 +454,8 @@ walletUpdateBalancesInfo= function() {
             if(!resJson.hasOwnProperty(k))
                 continue;
             for (var k in wallet_addrs) {
-                // var thread = wallet_addrs[k].key.thread
-                // wallet_addrs[k].balance = parseFloat(resJson[k.substring(1)].final_ledger_data.balance);
-                wallet_addrs[k].balance = new Decimal(resJson[k.substring(1)].final_ledger_data.balance).dividedBy(1e9).toString();
-                wallet_addrs[k].candidate_balance = new Decimal(resJson[k.substring(1)].candidate_ledger_data.balance).dividedBy(1e9).toString();
+                wallet_addrs[k].balance = new Decimal(resJson[k].final_ledger_data.balance).dividedBy(1e9).toString();
+                wallet_addrs[k].candidate_balance = new Decimal(resJson[k].candidate_ledger_data.balance).dividedBy(1e9).toString();
                 var balancefield = document.getElementById('wallet_balance_'+k);
                 if(!balancefield)
                     continue;
@@ -483,10 +481,9 @@ walletUpdateBalancesInfo= function() {
 	for (var k in wallet_addrs) {
         if(!wallet_addrs.hasOwnProperty(k))
             continue;
-	    reqval += (reqval == '' ? '?addrs[' + encodeURIComponent(idx) +']=' : '&addrs[' + encodeURIComponent(idx) +']=') + encodeURIComponent(k.substring(1));
+	    reqval += (reqval == '' ? '?addrs[' + encodeURIComponent(idx) +']=' : '&addrs[' + encodeURIComponent(idx) +']=') + encodeURIComponent(k);
         idx += 1
     }
 	if(reqval != '')
-        // walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_data?addrs[0]=2oxLZc6g6EHfc5VtywyPttEeGDxWq3xjvTNziayWGDfxETZVTi&' + reqval, null, onresponse, onerror);
         walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_info' + reqval, null, onresponse, onerror);
 }

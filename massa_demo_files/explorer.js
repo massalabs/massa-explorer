@@ -12,7 +12,9 @@ explorerProcessCommands= function(pageid, cmds) {
     
     if('explore' in cmds) {
         explorerViewSelCenter= !('nocenter' in cmds)
-        explorerSearch(cmds['explore'])
+        explorerSearchBlock(cmds['explore'])
+		explorerSearchTransaction(cmds['explore'])
+		explorerSearchAddress(cmds['explore'])
     }
     else
         explorerSearchClear();
@@ -140,7 +142,7 @@ explorerInit= function() {
 			}
 		}
 		if(mini != null)
-			openhash('#explorer?explore=B' + encodeURIComponent(explorerViewIntervalBlocks[mini].blockId) + '&nocenter');
+			openhash('#explorer?explore=' + encodeURIComponent(explorerViewIntervalBlocks[mini].blockId) + '&nocenter');
 		else
 			openhash('#explorer');
 	}
@@ -162,25 +164,16 @@ explorerInit= function() {
 	finished_loading('explorer_init');
 }
 
-var explorerSearchXhr= null
-var explorerSearchTimeout= null
-explorerSearch= function(what, first=true) {
+var explorerSearchBlockXhr= null
+var explorerSearchBlockTimeout= null
+explorerSearchBlock= function(what, first=true) {
 	if(what == '') { explorerSearchClear(); return; }
-	if(explorerSearchTimeout != null) { clearTimeout(explorerSearchTimeout); explorerSearchTimeout=null; }
-	if(explorerSearchXhr != null) { var tmp=explorerSearchXhr; explorerSearchXhr=null; tmp.abort(); }
-	var div= document.getElementById('explorerSearchResult');
+	if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
+	if(explorerSearchBlockXhr != null) { var tmp=explorerSearchBlockXhr; explorerSearchBlockXhr=null; tmp.abort(); }
+	var div= document.getElementById('explorerBlockSearchResult');
 	var statusdiv= document.getElementById('explorerSearchStatus');
 	
 	// explorerViewSelId= null
-
-	explorerViewSelId= what
-	var isBlock = false
-	if(what) {
-		if(what.length > 1) {
-			isBlock = (what[0] == 'B')
-			explorerViewSelId = what;
-		}
-	}
 	
 	if(first) {
 		if(div) div.innerHTML= '';
@@ -190,20 +183,20 @@ explorerSearch= function(what, first=true) {
 	}
 
 	function onresponse(resJson, xhr) {
+		explorerViewSelId= what
+		// var isBlock = true
+		explorerViewSelId = what
+
 		resJson['what'] = what
 
-		if(what[0] != 'A') {
-			explorerSetSearchTable(resJson);
-			var statusdiv= document.getElementById('explorerSearchStatus');
-			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-		}
-		else
-			addressOperationsSearch(resJson)
+		explorerSetBlockSearchTable(resJson);
+		var statusdiv= document.getElementById('explorerSearchStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
-		explorerSearchXhr= null;
-		explorerSearchTimeout= setTimeout(explorerSearch, 10000, what, false)
+		explorerSearchBlockXhr= null;
+		explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 10000, what, false)
 		
-		if(isBlock && explorerViewSelCenter) {
+		if(explorerViewSelCenter) {
 		// 	if(resJson.type == 'block') {
 		// 		explorerViewSelId= String(resJson.blockId)
 			if(resJson['Active'])
@@ -211,7 +204,7 @@ explorerSearch= function(what, first=true) {
 			else if(resJson['Stored'])
 				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Stored.header.content.slot.period + resJson.Stored.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
 			// explorerViewEnd= parseFloat(resJson.timestamp) + explorerViewTimespan/2;
-			document.getElementById('explorer_livescroll').checked= false;
+			document.getElementById('explorer_livescroll').checked = false;
 			explorerViewScrolling= false;
 		// 	}
 		}
@@ -219,19 +212,102 @@ explorerSearch= function(what, first=true) {
 		explorerViewSelCenter= false
 	}
 	function onerror(error, xhr) {
-		if(explorerSearchXhr != null) { 
-			explorerSearchXhr= null;
+		if(explorerSearchBlockXhr.statusText=="Not Found") {
+			var block_dic = {'what': what}
+			explorerSetBlockSearchTable(block_dic)
+			// console.log('Block not found')
+			// TODO
+		}
+		else if(explorerSearchBlockXhr != null) { 
+			explorerSearchBlockXhr= null;
 			var statusdiv= document.getElementById('explorerSearchStatus');
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			explorerSearchTimeout= setTimeout(explorerSearch, 1000, what, false)
+			explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 1000, what, false)
+		}
+			
+	}
+	explorerSearchBlockXhr = RESTRequest("GET", 'block/'+encodeURIComponent(what), null, onresponse, onerror);
+}
+
+var explorerSearchTransactionXhr= null
+var explorerSearchTransactionTimeout= null
+explorerSearchTransaction= function(what) {
+	if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
+	if(explorerSearchTransactionXhr != null) { var tmp=explorerSearchTransactionXhr; explorerSearchTransactionXhr=null; tmp.abort(); }
+	
+	// var div= document.getElementById('explorerSearchResult');
+	// var statusdiv= document.getElementById('explorerSearchStatus');
+	
+	// if(first) {
+	// 	if(div) div.innerHTML= '';
+	// 	explorersearch= document.getElementById('explorersearch');
+	// 	if(explorersearch) { explorersearch.value= what; }
+	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
+	// }
+
+	function onresponse(resJson, xhr) {
+		resJson['what'] = what
+		resJson['type'] = 'T'
+
+		explorerSetTransactionSearchTable(resJson);
+		var statusdiv= document.getElementById('explorerSearchStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+
+		explorerSearchTransactionXhr= null;
+		explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 10000, what, false)
+
+		explorerViewSelCenter= false
+	}
+	function onerror(error, xhr) {
+		if(explorerSearchTransactionXhr != null) { 
+			explorerSearchTransactionXhr= null;
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 1000, what, false)
+		}
+		else
+			explorerSearchAddress(what)
+	}
+	explorerSearchTransactionXhr = RESTRequest("GET", 'get_operations?operation_ids[0]='+encodeURIComponent(what), null, onresponse, onerror);
+}
+
+var explorerSearchAddressXhr= null
+var explorerSearchAddressTimeout= null
+explorerSearchAddress= function(what) {
+	if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
+	if(explorerSearchAddressXhr != null) { var tmp=explorerSearchAddressXhr; explorerSearchAddressXhr=null; tmp.abort(); }
+	
+	// var div= document.getElementById('explorerSearchResult');
+	// var statusdiv= document.getElementById('explorerSearchStatus');
+	
+	// if(first) {
+	// 	if(div) div.innerHTML= '';
+	// 	explorersearch= document.getElementById('explorersearch');
+	// 	if(explorersearch) { explorersearch.value= what; }
+	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
+	// }
+
+	function onresponse(resJson, xhr) {
+
+		resJson['what'] = what
+		resJson['type'] = 'A'
+
+		addressOperationsSearch(resJson)
+
+		explorerSearchAddressXhr= null;
+		explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
+
+		explorerViewSelCenter= false
+	}
+	function onerror(error, xhr) {
+		if(explorerSearchAddressXhr != null) { 
+			explorerSearchAddressXhr= null;
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
 		}
 	}
-	if(what[0] == 'B')
-		explorerSearchXhr = RESTRequest("GET", 'block/'+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
-	if(what[0] == 'T')
-		explorerSearchXhr = RESTRequest("GET", 'get_operations?operation_ids[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
-	if(what[0] == 'A')
-		explorerSearchXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what.slice(1)), null, onresponse, onerror);
+	explorerSearchAddressXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what), null, onresponse, onerror);
 }
 
 var addressOperationsSearchXhr= null
@@ -254,27 +330,34 @@ addressOperationsSearch = function(jsondata) {
 	function onresponse(resJson, xhr) {
 		// explorerSetAddressOperations(tab, resJson)
 		jsondata['operations'] = resJson
-		explorerSetSearchTable(jsondata)
+		explorerSetAddressSearchTable(jsondata)
+		
 		var statusdiv= document.getElementById('explorerSearchStatus');
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 	}
 	function onerror(error, xhr) {
-		if(explorerSearchXhr != null) { 
-			explorerSearchXhr= null;
+		if(addressOperationsSearchXhr != null) { 
+			addressOperationsSearchXhr= null;
 			var statusdiv= document.getElementById('explorerSearchStatus');
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			explorerSearchTimeout= setTimeout(explorerSearch, 1000, address, false)
+			addressOperationsSearchTimeout= setTimeout(addressOperationsSearch, 1000, jsondata, false)
 		}
 	}
-	explorerSearchXhr = RESTRequest("GET", 'operations_involving_address/'+encodeURIComponent(jsondata['what'].slice(1)), null, onresponse, onerror);
+	addressOperationsSearchXhr = RESTRequest("GET", 'operations_involving_address/'+encodeURIComponent(jsondata['what']), null, onresponse, onerror);
 }
 
 explorerSearchClear= function() {
 	explorerSearchResult= null;
 	explorersearch= document.getElementById('explorersearch');
 	if(explorersearch) { explorersearch.value= ''; }
-	if(explorerSearchTimeout != null) { clearTimeout(explorerSearchTimeout); explorerSearchTimeout=null; }
-	if(explorerSearchXhr != null) { var tmp=explorerSearchXhr; explorerSearchXhr=null; tmp.abort(); }
+	if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
+	if(explorerSearchBlockXhr != null) { var tmp=explorerSearchBlockXhr; explorerSearchBlockXhr=null; tmp.abort(); }
+	if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
+	if(explorerSearchTransactionXhr != null) { var tmp=explorerSearchTransactionXhr; explorerSearchTransactionXhr=null; tmp.abort(); }
+	if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
+	if(explorerSearchAddressXhr != null) { var tmp=explorerSearchAddressXhr; explorerSearchAddressXhr=null; tmp.abort(); }
+	if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
+	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
 	var div= document.getElementById('explorerSearchResult');
 	if(div) div.innerHTML= '';
 	var statusdiv= document.getElementById('explorerSearchStatus');
@@ -283,12 +366,12 @@ explorerSearchClear= function() {
 	explorerViewSelCenter= false;
 }
 
-explorerSearchResult= null
-explorerSetSearchTable= function(jsondata) {
-	explorerSearchResult= jsondata
-	var div= document.getElementById('explorerSearchResult');
+explorerBlockSearchResult= null
+explorerSetBlockSearchTable= function(jsondata) {
+	explorerBlockSearchResult= jsondata
+	var div= document.getElementById('explorerBlockSearchResult');
 	if(!div) return;
-	
+
 	div.innerHTML= '';
 	
 	var tab= document.createElement('TABLE');
@@ -299,6 +382,7 @@ explorerSetSearchTable= function(jsondata) {
 	htr.appendChild(hth);
 	hth.colSpan= 2;
 	hth.classList.add('ellipsis');
+
 	var addheader= function(h) {
 		hth.appendChild(document.createTextNode(String(h)));
 	}
@@ -316,6 +400,112 @@ explorerSetSearchTable= function(jsondata) {
 			td_content.appendChild(document.createTextNode(String(content)));
 		return td_content
 	}
+	
+	var createSearchLink= function(target) {
+		a= document.createElement('A');
+		a.classList.add('keylink');
+		a.href= "#explorer?explore=" + encodeURIComponent(target);
+		a.appendChild(document.createTextNode(target))
+		return a;
+	}
+
+	addheader('Block ' + String(jsondata['what']));
+	if (jsondata['Active']) {
+		addrow('Status', 'Active')
+		var tdc = addrow('Creator', null)
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Active.header.content['creator']))))
+		addrow('Thread', jsondata.Active.header.content.slot['thread'])
+		addrow('Period', jsondata.Active.header.content.slot['period'])
+		addrow('Signature', jsondata.Active.header['signature'])
+		
+		// TODO: Add operations
+		var operations = jsondata.Active.operations;
+		addrow('Op. Count', operations.length)
+		for(var i= 0 ; i < operations.length ; i++) {
+			var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
+			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+			var tdc= addrow('Transaction', null)
+			tdc.appendChild(createSearchLink(String(tx_id)));
+		}
+		
+		parentIds = jsondata.Active.header.content['parents'];
+		for(var i= 0 ; i < parentIds.length ; i++) {
+			var tdc= addrow('Parent (thread ' + i + ')', null)
+			tdc.appendChild(createSearchLink(String(parentIds[i])));
+		}
+	}
+	else if (jsondata['Stored']) {
+		addrow('Status', 'Stored')
+		var tdc = addrow('Creator', null)
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Stored.header.content['creator']))))
+		addrow('Thread', jsondata.Stored.header.content.slot['thread'])
+		addrow('Period', jsondata.Stored.header.content.slot['period'])
+		addrow('Signature', jsondata.Stored.header['signature'])
+
+		var operations = jsondata.Stored.operations;
+		addrow('Op. Count', operations.length)
+		for(var i= 0 ; i < operations.length ; i++) {
+			var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
+			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+			var tdc= addrow('Transaction', null)
+			tdc.appendChild(createSearchLink('T' + String(tx_id)));
+		}
+		
+		parentIds = jsondata.Stored.header.content['parents'];
+		for(var i= 0 ; i < parentIds.length ; i++) {
+			var tdc= addrow('Parent (thread ' + i + ')', null)
+			tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
+		}
+	}
+	else if (jsondata['Discarded']) {
+		addrow('Status', 'Discarded (' + jsondata.Discarded + ')')
+	}
+	else {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field= document.createElement('TD');
+		td_field.classList.add('smalltd');
+		tr.appendChild(td_field);
+		td_field.appendChild(document.createTextNode('Block not found'));
+	}
+		
+}
+
+explorerTransactionSearchResult= null
+explorerSetTransactionSearchTable= function(jsondata) {
+	explorerTransactionSearchResult= jsondata
+	var div= document.getElementById('explorerTransactionSearchResult');
+	if(!div) return;
+
+	div.innerHTML= '';
+	
+	var tab= document.createElement('TABLE');
+	div.appendChild(tab);
+	var htr= document.createElement('TR');
+	tab.appendChild(htr);
+	var hth= document.createElement('TH');
+	htr.appendChild(hth);
+	hth.colSpan= 2;
+	hth.classList.add('ellipsis');
+
+	var addheader= function(h) {
+		hth.appendChild(document.createTextNode(String(h)));
+	}
+	var addrow = function(field, content) {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field= document.createElement('TD');
+		td_field.classList.add('smalltd');
+		tr.appendChild(td_field);
+		td_field.appendChild(document.createTextNode(String(field)));
+		var td_content= document.createElement('TD');
+		td_content.classList.add('ellipsis');
+		tr.appendChild(td_content);
+		if(content != null)
+			td_content.appendChild(document.createTextNode(String(content)));
+		return td_content
+	}
+	
 	var createSearchLink= function(target) {
 		a= document.createElement('A');
 		a.classList.add('keylink');
@@ -324,174 +514,107 @@ explorerSetSearchTable= function(jsondata) {
 		return a;
 	}
 	
-	// TODO
-	if (jsondata['what'][0] =='B') {
-		addheader('Block ' + String(jsondata['what']));
-		if (jsondata['Active']) {
-			// addheader('Block');
-			// if(String(jsondata['stakerId']) == 'Genesis')
-			// 	addrow('Staker ID', 'Genesis');
-			// else {
-			// 	var tdc= addrow('Staker ID', null);
-			// 	tdc.appendChild(createSearchLink(String(jsondata['stakerId'])))
-			// 	var stakerAddr= String(jsondata.header.content['creator'])
-			// 	if(stakerAddr != 'None') {
-			// 		var tdc= addrow('Staker address', null)
-			// 		tdc.appendChild(createSearchLink(stakerAddr))
-			// 	}
-			// }
-			addrow('Status', 'Active')
-			var tdc = addrow('Creator', null)
-			tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Active.header.content['creator']))))
-			addrow('Thread', jsondata.Active.header.content.slot['thread'])
-			addrow('Period', jsondata.Active.header.content.slot['period'])
-			// addrow('Reward', jsondata['reward'])
-			// addrow('Priority', jsondata['priority'])
-			// addrow('Protocol seed', jsondata['protocolSeed'])
-			// var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-			// addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-			addrow('Signature', jsondata.Active.header['signature'])
-			
-			// addrow('Tx count', String(jsondata['numberOfTransactions']))
-			var operations = jsondata.Active.operations;
-			for(var i= 0 ; i < operations.length ; i++) {
-				var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
-				var tdc= addrow('Transaction', null)
-				tdc.appendChild(createSearchLink('T' + String(tx_id)));
+	addheader('Transaction ' + String(jsondata['what']))
+	try {
+		var transactionInBlocks = jsondata[0][1]['in_blocks'];
+		Object.entries(transactionInBlocks).forEach(([key, value]) => {
+			var tdc= addrow('In block', null);
+			tdc.appendChild(createSearchLink(String(key)));
+			if(value[1]) {
+				addrow('Finality state', 'Final');
 			}
-			
-			parentIds = jsondata.Active.header.content['parents'];
-			for(var i= 0 ; i < parentIds.length ; i++) {
-				var tdc= addrow('Parent (thread ' + i + ')', null)
-				tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
-			}
-		}
-		else if (jsondata['Stored']) {
-			// addheader('Block');
-			// if(String(jsondata['stakerId']) == 'Genesis')
-			// 	addrow('Staker ID', 'Genesis');
-			// else {
-			// 	var tdc= addrow('Staker ID', null);
-			// 	tdc.appendChild(createSearchLink(String(jsondata['stakerId'])))
-			// 	var stakerAddr= String(jsondata.header.content['creator'])
-			// 	if(stakerAddr != 'None') {
-			// 		var tdc= addrow('Staker address', null)
-			// 		tdc.appendChild(createSearchLink(stakerAddr))
-			// 	}
-			// }
-			addrow('Status', 'Stored')
-			var tdc = addrow('Creator', null)
-			tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Stored.header.content['creator']))))
-			addrow('Thread', jsondata.Stored.header.content.slot['thread'])
-			addrow('Period', jsondata.Stored.header.content.slot['period'])
-			// addrow('Reward', jsondata['reward'])
-			// addrow('Priority', jsondata['priority'])
-			// addrow('Protocol seed', jsondata['protocolSeed'])
-			// var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-			// addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-			addrow('Signature', jsondata.Stored.header['signature'])
-			
-			// addrow('Tx count', String(jsondata['numberOfTransactions']))
-			var operations = jsondata.Stored.operations;
-			for(var i= 0 ; i < operations.length ; i++) {
-				var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
-				var tdc= addrow('Transaction', null)
-				tdc.appendChild(createSearchLink('T' + String(tx_id)));
-			}
-			
-			parentIds = jsondata.Stored.header.content['parents'];
-			for(var i= 0 ; i < parentIds.length ; i++) {
-				var tdc= addrow('Parent (thread ' + i + ')', null)
-				tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
-			}
-		}
-		else if (jsondata['Discarded']) {
-			addrow('Status', 'Discarded (' + jsondata.Discarded + ')')
-		}
+			else
+				addrow('Finality state', 'Pending');
+			// addrow('Finality State', value[1]);
+		});
+		// for(var i= 0 ; i < transactionInBlocks.length ; i++) {
+		// 	var tdc= addrow('In block', null);
+		// 	tdc.appendChild(createSearchLink('B' + String(transactionInBlocks[i])));
+		// }
+		var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
+		addr = xbqcrypto.parse_public_base58check(addr).pubkey
+		addr = xbqcrypto.deduce_address(addr)
+		var tdc= addrow('From', null);
+		tdc.appendChild(createSearchLink(addr));
+		var tdc= addrow('To', null);
+		tdc.appendChild(createSearchLink(String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
+		var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount']).dividedBy(1e9)
+		addrow('Value', value);
+		var fee = new Decimal(jsondata[0][1]['op']['content']['fee']).dividedBy(1e9)
+		addrow('Fee', fee);
+		addrow('In pool', jsondata[0][1]['in_pool']);
+	// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
+	// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
+		addrow('Thread', xbqcrypto.get_address_thread(addr));
+	// 	addrow('Transaction Time', jsondata['txTime']);
 	}
-	else if (jsondata['what'][0] =='T') {
-		try {
-			addheader('Transaction ' + String(jsondata['what']))
-			var transactionInBlocks = jsondata[0][1]['in_blocks'];
-			Object.entries(transactionInBlocks).forEach(([key, value]) => {
-				var tdc= addrow('In block', null);
-				tdc.appendChild(createSearchLink('B' + String(key)));
-				if(value[1]) {
-					addrow('Finality state', 'Final');
-				}
-				else
-					addrow('Finality state', 'Pending');
-				// addrow('Finality State', value[1]);
-			});
-			// for(var i= 0 ; i < transactionInBlocks.length ; i++) {
-			// 	var tdc= addrow('In block', null);
-			// 	tdc.appendChild(createSearchLink('B' + String(transactionInBlocks[i])));
-			// }
-			var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
-			addr = xbqcrypto.parse_public_base58check('PBK' + addr).pubkey
-			addr = xbqcrypto.deduce_address(addr)
-			var tdc= addrow('From', null);
-			tdc.appendChild(createSearchLink(addr));
-			var tdc= addrow('To', null);
-			tdc.appendChild(createSearchLink('A' + String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
-			var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount']).dividedBy(1e9)
-			addrow('Value', value);
-			var fee = new Decimal(jsondata[0][1]['op']['content']['fee']).dividedBy(1e9)
-			addrow('Fee', fee);
-			addrow('In pool', jsondata[0][1]['in_pool']);
-		// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-		// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-			addrow('Thread', xbqcrypto.get_address_thread(addr));
-		// 	addrow('Transaction Time', jsondata['txTime']);
-		}
-		catch(ex) {
-			div.innerHTML= '<span>' + 'Transaction not found in any block or pool' + '</span>';
-		}
+	catch(ex) {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field= document.createElement('TD');
+		td_field.classList.add('smalltd');
+		tr.appendChild(td_field);
+		td_field.appendChild(document.createTextNode('Transaction not found in any block or pool'));
 	}
-	else if (jsondata['what'][0] =='A') {
+}
 
-		addheader('Address ' + String(jsondata['what']));
-		
-		var balance = new Decimal(jsondata[jsondata.what.slice(1)].final_ledger_data.balance).dividedBy(1e9)
-		addrow('Final balance', balance);
-		var candidate_balance = new Decimal(jsondata[jsondata.what.slice(1)].candidate_ledger_data.balance).dividedBy(1e9)
-		addrow('Candidate balance', candidate_balance);
-		var thread = xbqcrypto.get_address_thread(jsondata['what'])
-		addrow('Thread', thread);
 
-		for (const [key, value] of Object.entries(jsondata['operations'])) {
-			var tdc = addrow('Transaction', null);
-			tdc.appendChild(createSearchLink('T' + String(key)));
-		}
+explorerAddressSearchResult= null
+explorerSetAddressSearchTable= function(jsondata) {
+	explorerAddressSearchResult= jsondata
+	var div= document.getElementById('explorerAddressSearchResult');
+	if(!div) return;
+	
+	div.innerHTML= '';
+	
+	var tab= document.createElement('TABLE');
+	div.appendChild(tab);
+	var htr= document.createElement('TR');
+	tab.appendChild(htr);
+	var hth= document.createElement('TH');
+	htr.appendChild(hth);
+	hth.colSpan= 2;
+	hth.classList.add('ellipsis');
 
-	// addressOperationsSearch(jsondata['what'], tab)
-	// 	var blocksWithStakerAddress= jsondata['blocksWithStakerAddress'];
-	// 	for(var i= 0 ; i < blocksWithStakerAddress.length ; i++) {
-	// 		var tdc= addrow('Block mined', null);
-	// 		tdc.appendChild(createSearchLink(String(blocksWithStakerAddress[i])));
-	// 	}
-	// }
-	// else if(typestr == 'staker') {
-	// 	addheader('Staker ' + String(jsondata['stakerId']));
-	// 	addrow('Stake', jsondata['stake'])
-	// 	addrow('Bandwidth', jsondata['bandwidth'])
-	// 	var tdc= addrow('Address', null);
-	// 	tdc.appendChild(createSearchLink(String(jsondata['address'])));
-
-	// 	var tmpts= new Date(1000 * Number(jsondata['startTime']))
-	// 	addrow('Start time', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
- //        if(jsondata.hasOwnProperty('endTime')) {
-	// 	    var tmpts= new Date(1000 * Number(jsondata['endTime']))
-	// 	    addrow('End time', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
- //        }
-	// 	addrow('Active', jsondata['active'])
-	// 	addrow('Block count', jsondata['nBlocks'])
-	// 	addrow('Final blocks', jsondata['nFinalBlocks'])
+	var addheader= function(h) {
+		hth.appendChild(document.createTextNode(String(h)));
 	}
-	else
-		div.innerHTML= '<span>' + JSON.stringify(jsondata) + '</span>';
+	var addrow = function(field, content) {
+		var tr = document.createElement('TR');
+		tab.appendChild(tr);
+		var td_field= document.createElement('TD');
+		td_field.classList.add('smalltd');
+		tr.appendChild(td_field);
+		td_field.appendChild(document.createTextNode(String(field)));
+		var td_content= document.createElement('TD');
+		td_content.classList.add('ellipsis');
+		tr.appendChild(td_content);
+		if(content != null)
+			td_content.appendChild(document.createTextNode(String(content)));
+		return td_content
+	}
+	
+	var createSearchLink= function(target) {
+		a= document.createElement('A');
+		a.classList.add('keylink');
+		a.href= "#explorer?explore=" + encodeURIComponent(target);
+		a.appendChild(document.createTextNode(target))
+		return a;
+	}
+
+	addheader('Address ' + String(jsondata['what']));
+	
+	var balance = new Decimal(jsondata[jsondata.what].final_ledger_data.balance).dividedBy(1e9)
+	addrow('Final balance', balance);
+	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance).dividedBy(1e9)
+	addrow('Candidate balance', candidate_balance);
+	var thread = xbqcrypto.get_address_thread(jsondata['what'])
+	addrow('Thread', thread);
+
+	for (const [key, value] of Object.entries(jsondata['operations'])) {
+		var tdc = addrow('Transaction', null);
+		tdc.appendChild(createSearchLink(String(key)));
+	}
 }
 
 explorerSetAddressOperations = function(tab, jsondata) {
@@ -518,12 +641,10 @@ explorerSetAddressOperations = function(tab, jsondata) {
 		return a;
 	}
 
-	console.log(jsondata)
-
 	for (const [key, value] of Object.entries(jsondata)) {
 		console.log(key, value);
 		var tdc = addrow('Transaction', null);
-		tdc.appendChild(createSearchLink('T' + String(key)));
+		tdc.appendChild(createSearchLink(String(key)));
 	}
 }
 
@@ -881,26 +1002,26 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		var drawLinesFromThread= null, drawLinesFromTimestamp= null, drawLinesToTimestamps= null;
 	
 		//Is the info present in the search results ?
-		if(explorerSearchResult != null) {
+		if(explorerBlockSearchResult != null) {
 			// TODO
-			if(explorerSearchResult['what'][0] == 'B' && (explorerSearchResult['Active'] || explorerSearchResult['Stored']) && explorerGetViewIntervalResult != null) {
-				if(explorerSearchResult['Active'])
+			if((explorerBlockSearchResult['Active'] || explorerBlockSearchResult['Stored']) && explorerGetViewIntervalResult != null) {
+				if(explorerBlockSearchResult['Active'])
 					var status = 'Active'
 				else
 					var status = 'Stored'
-				if(String(explorerSearchResult['what']) == explorerViewSelId ) {
+				if(String(explorerBlockSearchResult['what']) == explorerViewSelId) {
 					drawLinesToTimestamps = []
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-								if (explorerSearchResult[status].header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
+								if (explorerBlockSearchResult[status].header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
 									parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
 					}
-					drawLinesFromThread = parseInt(explorerSearchResult[status].header.content.slot['thread'])
-					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerSearchResult[status].header.content.slot['period'] + explorerSearchResult[status].header.content.slot['thread']/nthreads) * explorerT0) / 1000
+					drawLinesFromThread = parseInt(explorerBlockSearchResult[status].header.content.slot['thread'])
+					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerBlockSearchResult[status].header.content.slot['period'] + explorerBlockSearchResult[status].header.content.slot['thread']/nthreads) * explorerT0) / 1000
 				}
 			}
 		}
@@ -975,7 +1096,3 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	if(relaunch)
 		window.requestAnimationFrame(explorerViewUpdate)
 }
-
-
-
-

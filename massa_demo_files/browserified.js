@@ -62,8 +62,7 @@ function get_pubkey_from_privkey(privkey) {
 }
 
 function deduce_address(pubkey) {
-    return 'A' + base58check_encode(hash_sha256(pubkey));
-    // return 'A' + base58check_encode(Buffer.concat([Buffer.from([version]), hash_sha256(pubkey)]));
+    return base58check_encode(hash_sha256(pubkey));
 }
 
 function get_pubkey_compressed_bytes(pubkey) {
@@ -73,47 +72,27 @@ function get_pubkey_compressed_bytes(pubkey) {
 }
 
 function parse_address(address) {
-    if(address[0] != 'A')
-        throw 'Invalid address. Address should start with an A';
-    const pubkeyhash= base58check_decode(address.substring(1));
+    const pubkeyhash= base58check_decode(address);
     if(pubkeyhash.length != 32)
         throw "Invalid address.";
     return {pubkeyhash: pubkeyhash};
 }
 
 function deduce_private_base58check(privkey) {
-    // Remove version, PVK
-    return 'PVK' + base58check_encode(privkey);
+    return base58check_encode(privkey);
 }
 
 function parse_private_base58check(privb58c) {
-    // Remove version
-    if(!privb58c.startsWith('PVK'))
-        throw 'Invalid private base58check.';
-    const privkey= base58check_decode(privb58c.substring(3));
+    const privkey= base58check_decode(privb58c);
     return {privkey: privkey};
 }
 
-// function parse_private_base58check(privb58c) {
-//     if(!privb58c.startsWith('PVK'))
-//         throw 'Invalid private base58check.';
-//     const contents= base58check_decode(privb58c.substring(3));
-//     const privkey= contents.slice(1);
-//     if(!ecc.isPrivate(privkey))
-//         throw "Invalid base58check private key.";
-//     return {privkey: privkey, version: contents.readUInt8(0)};
-// }
-
 function deduce_public_base58check(pubkey) {
-    // TODO : Remove version
-    return 'PBK' + base58check_encode(pubkey);
+    return base58check_encode(pubkey);
 }
 
 function parse_public_base58check(pubb58c) {
-    if(!pubb58c.startsWith('PBK'))
-        throw 'Invalid public base58check.';
-    const pubkey = base58check_decode(pubb58c.substring(3));
-    // const pubkey = contents.slice(1);
+    const pubkey = base58check_decode(pubb58c);
     if(pubkey.length != 33)
         throw "Invalid base58check public key.";
     return {pubkey: pubkey};
