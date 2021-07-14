@@ -172,39 +172,39 @@ stakingDisplayCreatestaker= function() {
     }
 }
 
-var stakingCreatestakerXhr= null;
-var stakingCreatestakerTimeout= null;
-stakingCreatestaker= function(data) {
-	if(stakingCreatestakerTimeout != null) { clearTimeout(stakingCreatestakerTimeout); stakingCreatestakerTimeout=null; }
-	if(stakingCreatestakerXhr != null) { var tmp=stakingCreatestakerXhr; stakingCreatestakerXhr=null; tmp.abort(); }
+// var stakingCreatestakerXhr= null;
+// var stakingCreatestakerTimeout= null;
+// stakingCreatestaker= function(data) {
+// 	if(stakingCreatestakerTimeout != null) { clearTimeout(stakingCreatestakerTimeout); stakingCreatestakerTimeout=null; }
+// 	if(stakingCreatestakerXhr != null) { var tmp=stakingCreatestakerXhr; stakingCreatestakerXhr=null; tmp.abort(); }
 	
-	function onresponse(resJson, xhr) {
-		stakingCreatestakerXhr= null;
-		if(resJson.result == "OK") {
-		    alert("Staker successfully created:\n" + resJson.stakerId);
-		    stakingAddStakerToList(resJson.stakerId);
-		    staking_create_staker_form.reset();
-		} else {
-		    alert('An error occured while creating staker: ' + resJson.errorMessage + '. staker not created.');
-		}
-	    staking_creatingstaker= false;
-	    stakingDisplayCreatestaker();
-	}
-	function onerror(error, xhr) {
-		if(stakingCreatestakerXhr != null) { // yeah, otherwise we actually wanted it to die
-			stakingCreatestakerXhr= null;
-			if(confirm('An network error occured while creating the staker: '+ error +'. Retry ?')) {
-			    stakingCreatestaker(data);
-			} else {
-			    staking_creatingstaker= false;
-			    stakingDisplayCreatestaker();
-			}
-		}
-	}
-	staking_creatingstaker= true;
-	stakingDisplayCreatestaker();
-	walletSendTransactionXhr= RESTRequest("PUT", 'createStaker', data, onresponse, onerror);
-}
+// 	function onresponse(resJson, xhr) {
+// 		stakingCreatestakerXhr= null;
+// 		if(resJson.result == "OK") {
+// 		    alert("Staker successfully created:\n" + resJson.stakerId);
+// 		    stakingAddStakerToList(resJson.stakerId);
+// 		    staking_create_staker_form.reset();
+// 		} else {
+// 		    alert('An error occured while creating staker: ' + resJson.errorMessage + '. staker not created.');
+// 		}
+// 	    staking_creatingstaker= false;
+// 	    stakingDisplayCreatestaker();
+// 	}
+// 	function onerror(error, xhr) {
+// 		if(stakingCreatestakerXhr != null) { // yeah, otherwise we actually wanted it to die
+// 			stakingCreatestakerXhr= null;
+// 			if(confirm('An network error occured while creating the staker: '+ error +'. Retry ?')) {
+// 			    stakingCreatestaker(data);
+// 			} else {
+// 			    staking_creatingstaker= false;
+// 			    stakingDisplayCreatestaker();
+// 			}
+// 		}
+// 	}
+// 	staking_creatingstaker= true;
+// 	stakingDisplayCreatestaker();
+// 	walletSendTransactionXhr= RESTRequest("PUT", 'createStaker', data, onresponse, onerror);
+// }
 
 stakingInfoResult = null
 stakingInfoSetTable = function(jsondata) {
@@ -212,6 +212,7 @@ stakingInfoSetTable = function(jsondata) {
 	var div = document.getElementById('stakingInfoResult');
 	if (!div) return;
 	div.innerHTML= '';
+
 	var tab = document.createElement('TABLE');
 	div.appendChild(tab);
     var htr = document.createElement('TR');
@@ -239,6 +240,7 @@ stakingInfoSetTable = function(jsondata) {
 		tab.appendChild(tr);
 		var td_field = document.createElement('TD');
 		td_field.classList.add('keylink');
+        td_field.classList.add('ellipsis');
 		tr.appendChild(td_field);
 		td_field.appendChild(field);
 		var td_content= document.createElement('TD');

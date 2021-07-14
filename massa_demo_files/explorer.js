@@ -422,7 +422,6 @@ explorerSetBlockSearchTable= function(jsondata) {
 	explorerBlockSearchResult= jsondata
 	var div= document.getElementById('explorerBlockSearchResult');
 	if(!div) return;
-
 	div.innerHTML= '';
 	
 	var tab= document.createElement('TABLE');
@@ -725,9 +724,7 @@ var explorerStakingUpdateInfosXhr = null
 explorerStakingUpdateInfos = function(jsondata) {
 	function onresponse(resJson, xhr) {
 		jsondata['stakers'] = resJson
-        explorerSetInfo(jsondata);
-		var statusdiv= document.getElementById('explorerInfoStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+        explorerNodesUpdateInfos(jsondata);
 	}
 	function onerror(error, xhr) {
 		if(explorerStakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
@@ -737,6 +734,24 @@ explorerStakingUpdateInfos = function(jsondata) {
 		}
 	}
 	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+}
+
+var explorerNodesUpdateInfosXhr = null
+explorerNodesUpdateInfos = function(jsondata) {
+	function onresponse(resJson, xhr) {
+		jsondata['nodes'] = resJson
+        explorerSetInfo(jsondata);
+		var statusdiv= document.getElementById('explorerInfoStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+	}
+	function onerror(error, xhr) {
+		if(explorerNodesUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
+			explorerNodesUpdateInfosXhr = null;
+			var statusdiv= document.getElementById('explorerInfoStatus');
+			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
+		}
+	}
+	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
 }
 
 explorerSetInfo= function(jsondata) {
@@ -768,6 +783,12 @@ explorerSetInfo= function(jsondata) {
 	var seconds = "0" + date.getSeconds();
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
+	var n_nodes = 1
+	for (const [key, value] of Object.entries(jsondata['nodes'])) {
+		if(value['active_out_connections'] > 0 || value['active_in_connections'] > 0)
+			n_nodes += 1
+	}
+
 	data = jsondata;
 	div.innerHTML = '<span>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
@@ -775,6 +796,7 @@ explorerSetInfo= function(jsondata) {
 	Transaction Throughput: <b>' + data.final_operation_count / data.timespan * 1000 + ' tx/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
 	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
+	Number of Nodes: <b>' + n_nodes + '</b><br>\
 	Number of Stakers: <b>' + totstakers + '</b><br>\
 	Number of Rolls: <b>' + totrolls + '</b><br>\
 	</span>';

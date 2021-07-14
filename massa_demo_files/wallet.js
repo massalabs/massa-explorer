@@ -8,12 +8,12 @@ getLatestPeriod = function() {
         walletUpdateLatestPeriodXhr = null;
 
 		latest_period = resJson.latest_slot.period
-        walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 3000, false)
+        walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 10000, false)
 	}
 	function onerror(error, xhr) {
 		if(walletUpdateLatestPeriodXhr != null) { // yeah, otherwise we actually wanted it to die
 			walletUpdateLatestPeriodXhr = null;
-            walletUpdateLatestPeriodTimeout = setTimeout(walletGetState, 5000, false)
+            walletUpdateLatestPeriodTimeout = setTimeout(getLatestPeriod, 10000, false)
 		}
 	}
 	RESTRequest("GET", "state", null, onresponse, onerror);
@@ -24,7 +24,6 @@ wallet_addrs= {};
 wallet_empty= true;
 wallet_sending= false;
 wallet_reading= false;
-
 walletInit= function() {
     wallet_trans_progress= document.getElementById('wallet_trans_progress');
     wallet_addrtable= document.getElementById('addrtable');
@@ -67,7 +66,6 @@ walletInit= function() {
     });
 
     document.getElementById('genaddr').addEventListener("click", function() {
-        var version= 0;
         wallet_addrinput.value= xbqcrypto.deduce_private_base58check(window.crypto.getRandomValues(new Uint8Array(32)));
         wallet_addrinput.removeAttribute("aria-invalid");
     });
@@ -121,7 +119,6 @@ walletInit= function() {
         // validate amount
         var sendamount= null;
         try {
-            // sendamount= parseInt(Math.round(Number(wallet_sendamount.value) * 1e9));
             sendamount = new Decimal(wallet_sendamount.value).times(1e9);
             if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 64) - 1))
                 throw "Invalid amount.";
@@ -137,7 +134,6 @@ walletInit= function() {
             if(wallet_sendfee.value == "") {
                 wallet_sendfee.value = 0;
             }
-            // sendfee = parseInt(Math.round(Number(wallet_sendfee.value) * 1e9));
             sendfee = new Decimal(wallet_sendfee.value).times(1e9);
             if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 64) - 1)))
                 throw "Invalid fee.";
@@ -164,8 +160,6 @@ walletInit= function() {
         // generate transaction
         if(everythingok) {
             try {
-                // walletGetState();
-                // console.log(getLatestPeriod())
                 getLatestPeriod(function() {
                     console.log('huzzah, I\'m done!');
                 })
