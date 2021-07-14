@@ -1,3 +1,5 @@
+requestsRemaining = 0
+requestsSuccess = 0
 explorerProcessCommands= function(pageid, cmds) {
     if(pageid == 'explorer') {
         explorerGetViewInterval();
@@ -12,9 +14,10 @@ explorerProcessCommands= function(pageid, cmds) {
     
     if('explore' in cmds) {
         explorerViewSelCenter= !('nocenter' in cmds)
-        explorerSearchBlock(cmds['explore'])
-		explorerSearchTransaction(cmds['explore'])
-		explorerSearchAddress(cmds['explore'])
+		explorerSearch(cmds['explore'])
+        // explorerSearchBlock(cmds['explore'])
+		// explorerSearchTransaction(cmds['explore'])
+		// explorerSearchAddress(cmds['explore'])
     }
     else
         explorerSearchClear();
@@ -164,65 +167,103 @@ explorerInit= function() {
 	finished_loading('explorer_init');
 }
 
-var explorerSearchBlockXhr= null
-var explorerSearchBlockTimeout= null
-explorerSearchBlock= function(what, first=true) {
+var explorerSearchTimeout = null
+explorerSearch = function(what, first=true) {
 	if(what == '') { explorerSearchClear(); return; }
-	if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
-	if(explorerSearchBlockXhr != null) { var tmp=explorerSearchBlockXhr; explorerSearchBlockXhr=null; tmp.abort(); }
-	var div= document.getElementById('explorerBlockSearchResult');
+	if(explorerSearchTimeout != null) { clearTimeout(explorerSearchTimeout); explorerSearchTimeout=null; }
 	var statusdiv= document.getElementById('explorerSearchStatus');
-	
-	// explorerViewSelId= null
+	var div_block= document.getElementById('explorerBlockSearchResult');
+	var div_op= document.getElementById('explorerTransactionSearchResult');
+	var div_address= document.getElementById('explorerAddressSearchResult');
 	
 	if(first) {
-		if(div) div.innerHTML= '';
+		if(div_block) div_block.innerHTML= '';
+		if(div_op) div_op.innerHTML= '';
+		if(div_address) div_address.innerHTML= '';
 		explorersearch= document.getElementById('explorersearch');
 		if(explorersearch) { explorersearch.value= what; }
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
 	}
 
-	function onresponse(resJson, xhr) {
-		explorerViewSelId= what
-		// var isBlock = true
-		explorerViewSelId = what
+	if(requestsRemaining == 0){
+		requestsRemaining = 3
+		requestsSuccess = 0
+		explorerSearchBlock(what)
+		explorerSearchTransaction(what)
+		explorerSearchAddress(what)
+		explorerSearchStatus(first)
+		explorerSearchTimeout = setTimeout(explorerSearch, 10000, what, false)
+	}
+}
 
+var explorerSearchStatusTimeout = null
+explorerSearchStatus = function(first) {
+	if(explorerSearchStatusTimeout != null) { clearTimeout(explorerSearchStatusTimeout); explorerSearchStatusTimeout=null; }
+	var statusdiv= document.getElementById('explorerSearchStatus');
+	
+	// If there are no requests remaining we remove the loading status
+	if(requestsRemaining == 0){
+		if(requestsSuccess > 0) {
+			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		}
+		else
+			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'No block, operation or address found.'; }
+	}
+	else {
+		// Check search status in 500ms
+		explorerSearchStatusTimeout = setTimeout(explorerSearchStatus, 200, false)
+	}
+}
+
+var explorerSearchBlockXhr= null
+// var explorerSearchBlockTimeout= null
+explorerSearchBlock= function(what) {
+	// if(what == '') { explorerSearchClear(); return; }
+	// if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
+	if(explorerSearchBlockXhr != null) { var tmp=explorerSearchBlockXhr; explorerSearchBlockXhr=null; tmp.abort(); }
+	var div= document.getElementById('explorerBlockSearchResult');
+	// var statusdiv= document.getElementById('explorerSearchStatus');
+	
+	explorerViewSelId= null
+	
+	// if(first) {
+	// 	if(div) div.innerHTML= '';
+	// 	explorersearch= document.getElementById('explorersearch');
+	// 	if(explorersearch) { explorersearch.value= what; }
+	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
+	// }
+
+	function onresponse(resJson, xhr) {
+		requestsRemaining -= 1
+		requestsSuccess += 1
+		explorerViewSelId= what
 		resJson['what'] = what
 
 		explorerSetBlockSearchTable(resJson);
-		var statusdiv= document.getElementById('explorerSearchStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		// var statusdiv= document.getElementById('explorerSearchStatus');
+		// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
 		explorerSearchBlockXhr= null;
-		explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 10000, what, false)
+		// explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 10000, what, false)
 		
 		if(explorerViewSelCenter) {
-		// 	if(resJson.type == 'block') {
-		// 		explorerViewSelId= String(resJson.blockId)
 			if(resJson['Active'])
 				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Active.header.content.slot.period + resJson.Active.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
 			else if(resJson['Stored'])
 				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Stored.header.content.slot.period + resJson.Stored.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
-			// explorerViewEnd= parseFloat(resJson.timestamp) + explorerViewTimespan/2;
 			document.getElementById('explorer_livescroll').checked = false;
 			explorerViewScrolling= false;
-		// 	}
 		}
 
 		explorerViewSelCenter= false
 	}
 	function onerror(error, xhr) {
-		if(explorerSearchBlockXhr.statusText=="Not Found") {
-			var block_dic = {'what': what}
-			explorerSetBlockSearchTable(block_dic)
-			// console.log('Block not found')
-			// TODO
-		}
-		else if(explorerSearchBlockXhr != null) { 
+		requestsRemaining -= 1
+		if(explorerSearchBlockXhr != null) { 
 			explorerSearchBlockXhr= null;
-			var statusdiv= document.getElementById('explorerSearchStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 1000, what, false)
+			// var statusdiv= document.getElementById('explorerSearchStatus');
+			// if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			// explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 1000, what, false)
 		}
 			
 	}
@@ -230,9 +271,9 @@ explorerSearchBlock= function(what, first=true) {
 }
 
 var explorerSearchTransactionXhr= null
-var explorerSearchTransactionTimeout= null
+// var explorerSearchTransactionTimeout= null
 explorerSearchTransaction= function(what) {
-	if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
+	// if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
 	if(explorerSearchTransactionXhr != null) { var tmp=explorerSearchTransactionXhr; explorerSearchTransactionXhr=null; tmp.abort(); }
 	
 	// var div= document.getElementById('explorerSearchResult');
@@ -246,24 +287,28 @@ explorerSearchTransaction= function(what) {
 	// }
 
 	function onresponse(resJson, xhr) {
+		requestsRemaining -= 1
+		requestsSuccess += 1
 		resJson['what'] = what
-		resJson['type'] = 'T'
 
+		if(resJson[0]) {
 		explorerSetTransactionSearchTable(resJson);
 		var statusdiv= document.getElementById('explorerSearchStatus');
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
 		explorerSearchTransactionXhr= null;
-		explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 10000, what, false)
+		// explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 10000, what, false)
 
 		explorerViewSelCenter= false
+		}
 	}
 	function onerror(error, xhr) {
+		requestsRemaining -= 1
 		if(explorerSearchTransactionXhr != null) { 
 			explorerSearchTransactionXhr= null;
-			var statusdiv= document.getElementById('explorerSearchStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 1000, what, false)
+			// var statusdiv= document.getElementById('explorerSearchStatus');
+			// if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			// explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 1000, what, false)
 		}
 		else
 			explorerSearchAddress(what)
@@ -272,9 +317,9 @@ explorerSearchTransaction= function(what) {
 }
 
 var explorerSearchAddressXhr= null
-var explorerSearchAddressTimeout= null
+// var explorerSearchAddressTimeout= null
 explorerSearchAddress= function(what) {
-	if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
+	// if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
 	if(explorerSearchAddressXhr != null) { var tmp=explorerSearchAddressXhr; explorerSearchAddressXhr=null; tmp.abort(); }
 	
 	// var div= document.getElementById('explorerSearchResult');
@@ -288,33 +333,35 @@ explorerSearchAddress= function(what) {
 	// }
 
 	function onresponse(resJson, xhr) {
-
 		resJson['what'] = what
-		resJson['type'] = 'A'
+		if (resJson[resJson.what].final_ledger_data.balance != 0 || resJson[resJson.what].candidate_ledger_data.balance !=0 || resJson[resJson.what].locked_balance != 0 || resJson[resJson.what].final_rolls !=0 || resJson[resJson.what].active_rolls || resJson[resJson.what].candidate_rolls != 0) {
+			addressOperationsSearch(resJson)
 
-		addressOperationsSearch(resJson)
+			explorerSearchAddressXhr= null;
+			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
 
-		explorerSearchAddressXhr= null;
-		explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
-
-		explorerViewSelCenter= false
+			explorerViewSelCenter= false
+		}
+		else
+			requestsRemaining -= 1
 	}
 	function onerror(error, xhr) {
+		requestsRemaining -= 1
 		if(explorerSearchAddressXhr != null) { 
 			explorerSearchAddressXhr= null;
-			var statusdiv= document.getElementById('explorerSearchStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
+			// var statusdiv= document.getElementById('explorerSearchStatus');
+			// if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
 		}
 	}
 	explorerSearchAddressXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what), null, onresponse, onerror);
 }
 
 var addressOperationsSearchXhr= null
-var addressOperationsSearchTimeout= null
+// var addressOperationsSearchTimeout= null
 addressOperationsSearch = function(jsondata) {
 	// if(address == '') { explorerSearchClear(); return; }
-	if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
+	// if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
 	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
 	// var div = document.getElementById('explorerSearchResult');
 	// var statusdiv = document.getElementById('explorerSearchStatus');
@@ -328,6 +375,8 @@ addressOperationsSearch = function(jsondata) {
 	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
 	// }
 	function onresponse(resJson, xhr) {
+		requestsRemaining -= 1
+		requestsSuccess += 1
 		// explorerSetAddressOperations(tab, resJson)
 		jsondata['operations'] = resJson
 		explorerSetAddressSearchTable(jsondata)
@@ -336,11 +385,12 @@ addressOperationsSearch = function(jsondata) {
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 	}
 	function onerror(error, xhr) {
+		requestsRemaining -= 1
 		if(addressOperationsSearchXhr != null) { 
 			addressOperationsSearchXhr= null;
 			var statusdiv= document.getElementById('explorerSearchStatus');
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			addressOperationsSearchTimeout= setTimeout(addressOperationsSearch, 1000, jsondata, false)
+			// addressOperationsSearchTimeout= setTimeout(addressOperationsSearch, 1000, jsondata, false)
 		}
 	}
 	addressOperationsSearchXhr = RESTRequest("GET", 'operations_involving_address/'+encodeURIComponent(jsondata['what']), null, onresponse, onerror);
@@ -350,13 +400,14 @@ explorerSearchClear= function() {
 	explorerSearchResult= null;
 	explorersearch= document.getElementById('explorersearch');
 	if(explorersearch) { explorersearch.value= ''; }
-	if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
+	if(explorerSearchTimeout != null) { clearTimeout(explorerSearchTimeout); explorerSearchTimeout=null; }
+	// if(explorerSearchBlockTimeout != null) { clearTimeout(explorerSearchBlockTimeout); explorerSearchBlockTimeout=null; }
 	if(explorerSearchBlockXhr != null) { var tmp=explorerSearchBlockXhr; explorerSearchBlockXhr=null; tmp.abort(); }
-	if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
+	// if(explorerSearchTransactionTimeout != null) { clearTimeout(explorerSearchTransactionTimeout); explorerSearchTransactionTimeout=null; }
 	if(explorerSearchTransactionXhr != null) { var tmp=explorerSearchTransactionXhr; explorerSearchTransactionXhr=null; tmp.abort(); }
-	if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
+	// if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
 	if(explorerSearchAddressXhr != null) { var tmp=explorerSearchAddressXhr; explorerSearchAddressXhr=null; tmp.abort(); }
-	if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
+	// if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
 	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
 	var div= document.getElementById('explorerSearchResult');
 	if(div) div.innerHTML= '';
@@ -514,48 +565,34 @@ explorerSetTransactionSearchTable= function(jsondata) {
 		return a;
 	}
 	
-	addheader('Transaction ' + String(jsondata['what']))
-	try {
-		var transactionInBlocks = jsondata[0][1]['in_blocks'];
-		Object.entries(transactionInBlocks).forEach(([key, value]) => {
-			var tdc= addrow('In block', null);
-			tdc.appendChild(createSearchLink(String(key)));
-			if(value[1]) {
-				addrow('Finality state', 'Final');
-			}
-			else
-				addrow('Finality state', 'Pending');
-			// addrow('Finality State', value[1]);
-		});
-		// for(var i= 0 ; i < transactionInBlocks.length ; i++) {
-		// 	var tdc= addrow('In block', null);
-		// 	tdc.appendChild(createSearchLink('B' + String(transactionInBlocks[i])));
-		// }
-		var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
-		addr = xbqcrypto.parse_public_base58check(addr).pubkey
-		addr = xbqcrypto.deduce_address(addr)
-		var tdc= addrow('From', null);
-		tdc.appendChild(createSearchLink(addr));
+	addheader('Operation ' + String(jsondata['what']))
+	var operation_type = Object.keys(jsondata[0][1]['op']["content"]["op"])[0]
+	var tdc= addrow('Operation type', operation_type)
+	var transactionInBlocks = jsondata[0][1]['in_blocks'];
+	Object.entries(transactionInBlocks).forEach(([key, value]) => {
+		var tdc= addrow('In block', null);
+		tdc.appendChild(createSearchLink(String(key)));
+		if(value[1]) {
+			addrow('Finality state', 'Final');
+		}
+		else
+			addrow('Finality state', 'Pending');
+	});
+	var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
+	addr = xbqcrypto.parse_public_base58check(addr).pubkey
+	addr = xbqcrypto.deduce_address(addr)
+	var tdc= addrow('From', null);
+	tdc.appendChild(createSearchLink(addr));
+	if(operation_type=="Transaction") {
 		var tdc= addrow('To', null);
 		tdc.appendChild(createSearchLink(String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
 		var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount']).dividedBy(1e9)
 		addrow('Value', value);
 		var fee = new Decimal(jsondata[0][1]['op']['content']['fee']).dividedBy(1e9)
 		addrow('Fee', fee);
-		addrow('In pool', jsondata[0][1]['in_pool']);
-	// 	var tmpts= new Date(1000 * Number(jsondata['timestamp']))
-	// 	addrow('Timestamp', tmpts.toLocaleString() + ' ' + tmpts.getMilliseconds() +  'ms' );
-		addrow('Thread', xbqcrypto.get_address_thread(addr));
-	// 	addrow('Transaction Time', jsondata['txTime']);
 	}
-	catch(ex) {
-		var tr = document.createElement('TR');
-		tab.appendChild(tr);
-		var td_field= document.createElement('TD');
-		td_field.classList.add('smalltd');
-		tr.appendChild(td_field);
-		td_field.appendChild(document.createTextNode('Transaction not found in any block or pool'));
-	}
+	addrow('In pool', jsondata[0][1]['in_pool']);
+	addrow('Thread', xbqcrypto.get_address_thread(addr));
 }
 
 
@@ -608,8 +645,17 @@ explorerSetAddressSearchTable= function(jsondata) {
 	addrow('Final balance', balance);
 	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance).dividedBy(1e9)
 	addrow('Candidate balance', candidate_balance);
+	var locked_balance = jsondata[jsondata.what].locked_balance
+	addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
+
+	var final_rolls = jsondata[jsondata.what].final_rolls
+	addrow('Final rolls', final_rolls);
+	var active_rolls = jsondata[jsondata.what].active_rolls
+	addrow('Active rolls', active_rolls);
+	var candidate_rolls = jsondata[jsondata.what].candidate_rolls
+	addrow('Candidate rolls', candidate_rolls);
 
 	for (const [key, value] of Object.entries(jsondata['operations'])) {
 		var tdc = addrow('Transaction', null);

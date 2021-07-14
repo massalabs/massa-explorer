@@ -276,7 +276,7 @@ wallet_download= function() {
     var dlanchor= document.getElementById('wallet_dlanchor');
     var datastr= "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resJSON));
     dlanchor.setAttribute("href", datastr);
-    dlanchor.setAttribute("download", "blockclique_wallet.json");
+    dlanchor.setAttribute("download", "wallet.dat");
     dlanchor.click();
 }
 
