@@ -187,18 +187,29 @@
                         while transaction sharding ensures that transactions of parallel blocks are compatible by construction.
                         Our open-source simulations show that our architecture scales beyond 10,000 transactions per second,
                         while staying decentralized and secure (see the <a href="https://arxiv.org/pdf/1803.09029" rel="noopener noreferrer" target="_blank"> technical paper</a> or the <a href="https://massa.net/blog/post/0/" rel="noopener noreferrer" target="_blank"> blog post introduction</a>).
-                        The Massa technology is therefore a promising basis for future crypto-currencies, and can bring decentralization back into the spotlight. <br>
+                        The main Massa website is <a href="https://massa.net" rel="noopener noreferrer" target="_blank"> here</a>. <br>
                     </p>
                     <nav>
                         <a href="https://arxiv.org/pdf/1803.09029">technical paper</a>
                     </nav>
+                    <nav>
+                        <a href="https://massa.net/blog/post/0/">Blog Intro</a>
+                    </nav>
+                    <nav>
+                        <a href="https://massa.net">massa.net</a>
+                    </nav>
 
-                    <h2>Live demo</h2>
+                    <h2>Massa Testnet</h2>
 
                     <p>
-                        You can explore a live growing blockclique, create a wallet, control a new staker (receiving free coins). Within a few minutes, your staker will produce some blocks and receive block rewards. Try sending coins to your friends! <br><br>
-                        We simulate on a single server (4Ghz 8-cores) a network of nodes that produce blocks, send blocks to peers and compute the best clique of compatible blocks. We compute the time for each message and block to be transmitted from one node to another depending on the simulated latency and bandwidth between each node of the network (average bandwidth of 64Mbps and latency of 100ms, similar to the Bitcoin network). <br><br>
-                    The parameters of Blockclique are the number of threads T, the average time between two blocks in each thread t<sub>0</sub>, the maximum block size BS, and the finality parameter F. We set T=32 threads, t<sub>0</sub>=16s, BS=675 kB and F=64 blocks. Due to cpu constraints (hundreds of nodes on the same server), we do not simulate endorsements, so we assume E=0, and blocks are by default filled with dummy transactions.
+                        On this website, you can explore the live testnet, create a wallet, and send coins to your friends! <br><br>
+                        On the Explorer page, you can search for the info on any block, address or operation, and you can click the graph to see each block.<br><br>
+                        In the Wallet page, you can see the balance of your addresses and send coins. If you don't have a wallet yet, you can generate addresses and add them to your wallet.
+                        If you need coins, just ask on the testnet channel of our <a href="https://discord.com/invite/TnsJQzXkRN" rel="noopener noreferrer" target="_blank"> Discord </a>, we'll send you some.<br><br>
+                        The Staking page shows the list of stakers and their number of rolls (1 roll = 500 coins here).<br><br>
+                        The parameters of the testnet are the number of threads T=32, the average time between two blocks in each thread t<sub>0</sub>=16s, the maximum block size BS=100kB, and the finality parameter F=64 blocks.
+                        <br><br>
+                        If you want to run a node and stake, here is the <a href="https://gitlab.com/massalabs/massa" rel="noopener noreferrer" target="_blank"> GitLab</a>, you'll find all details.
                     </p>
                 </article>
 
@@ -207,30 +218,20 @@
 
                     <p>
                         We'll be happy to hear your feedback and answer your questions.
-                        Please come to the Reddit community  <a href="https://www.reddit.com/r/Blockclique/" rel="noopener noreferrer" target="_blank"> r/blockclique </a>
-                        where we can discuss the demo,
-                        the <a href="https://arxiv.org/pdf/1803.09029" rel="noopener noreferrer" target="_blank"> technical paper</a>,
+                        Please come to our <a href="https://t.me/massanetwork" rel="noopener noreferrer" target="_blank"> Telegram </a>, <a href="https://discord.com/invite/TnsJQzXkRN" rel="noopener noreferrer" target="_blank"> Discord </a>, or <a href="https://www.reddit.com/r/massanet/" rel="noopener noreferrer" target="_blank"> Reddit </a> communities.
+                        Here is the <a href="https://arxiv.org/pdf/1803.09029" rel="noopener noreferrer" target="_blank"> technical paper</a>,
                         the <a href="https://massa.net/blog/post/0/" rel="noopener noreferrer" target="_blank"> blog post introduction</a>
-                        or the <a href="https://gitlab.com/blockclique/blockclique" rel="noopener noreferrer" target="_blank"> open-source simulations</a>.
+                        and the testnet <a href="https://gitlab.com/massalabs/massa" rel="noopener noreferrer" target="_blank"> GitLab</a>.
                         You can also contact us by email at  <a href="mailto:info@massa.net">info@massa.net</a>.
                     </p>
 
                 </article>
 
-                <article id="authors">
-                    <h2>Authors</h2>
-
-                    <p>
-                        Damir Vodenicarevic &amp; Sébastien Forestier &amp; Adrien Laversanne-Finot
-                    </p>
-
-                </article>
-
                 <article id="disclaimer">
-                    <h2>Disclaimer and license</h2>
+                    <h2>Disclaimer</h2>
                     <p>
-                        This is just a simulation: the coins have no value, and we can restart the simulation from scratch at any time without notice.
-                        We do not store data about you, and this website does not use cookies nor third-party tracking. The simulation software is licensed under the permissive open-source <a href="https://opensource.org/licenses/GPL-3.0" rel="noopener noreferrer" target="_blank">GPL-3.0 license</a>.
+                        This is just a testnet: the coins have no value, and we can restart the testnet from scratch at any time.
+                        We do not store data about you, and this website does not use cookies nor third-party tracking. 
                     </p>
                 </article>
 
