@@ -323,7 +323,7 @@ wallet_update_sendform= function() {
         document.getElementById('trans_send').style.display= "none";
         wallet_trans_progress.innerHTML= 'Add at least one address to send transactions.';
     } else {
-        wallet_addrtable.innerHTML= '<tr><th>Address</th><th class="smalltd">Thread</th><th class="smalltd">Final Balance</th><th class="smalltd"></th></tr>' + restabhtml;
+        wallet_addrtable.innerHTML= '<tr><th>Address</th><th class="smalltd">Thread</th><th class="smalltd">Balance</th><th class="smalltd"></th></tr>' + restabhtml;
         document.getElementById('trans_send').style.display= "";
         wallet_trans_progress.innerHTML= '';
     }
