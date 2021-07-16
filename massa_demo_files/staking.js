@@ -229,7 +229,7 @@ stakingInfoSetTable = function(jsondata) {
     hth3.classList.add('ellipsis');
     hth1.appendChild(document.createTextNode('Address'));
     hth2.appendChild(document.createTextNode('Rolls'));
-    hth3.appendChild(document.createTextNode('% of Rolls'));
+    hth3.appendChild(document.createTextNode('%'));
 
 	// var addheader= function(h) {
 	// 	hth.appendChild(document.createTextNode(String(h)));
@@ -282,7 +282,7 @@ stakingInfoSetTable = function(jsondata) {
 
     items.forEach(function (item, index) {
         if (index<500) {
-            addrow(createSearchLink(item[0]), item[1], item[1] / totrolls * 100)
+            addrow(createSearchLink(item[0]), item[1], Math.round(item[1] / totrolls * 100 * 100) / 100)
         }
     });
 
