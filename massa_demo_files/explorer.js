@@ -169,6 +169,7 @@ explorerInit= function() {
 
 var explorerSearchTimeout = null
 explorerSearch = function(what, first=true) {
+	what = what.trim();
 	if(what == '') { explorerSearchClear(); return; }
 	if(explorerSearchTimeout != null) { clearTimeout(explorerSearchTimeout); explorerSearchTimeout=null; }
 	var statusdiv= document.getElementById('explorerSearchStatus');
