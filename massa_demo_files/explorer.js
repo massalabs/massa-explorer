@@ -789,8 +789,8 @@ explorerSetInfo= function(jsondata) {
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
 	var n_nodes = 1
-	for (const [key, value] of Object.entries(jsondata['nodes'])) {
-		if(value['active_out_connections'] > 0 || value['active_in_connections'] > 0)
+	for (const [key, value] of Object.entries(jsondata['nodes']['peers'])) {
+		if(value['peer_info']['active_out_connections'] > 0 || value['peer_info']['active_in_connections'] > 0)
 			n_nodes += 1
 	}
 
