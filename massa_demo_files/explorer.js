@@ -649,7 +649,7 @@ explorerSetAddressSearchTable= function(jsondata) {
 	addrow('Final balance', balance);
 	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance)
 	addrow('Candidate balance', candidate_balance);
-	var locked_balance = new Decimal(sondata[jsondata.what].locked_balance)
+	var locked_balance = new Decimal(jsondata[jsondata.what].locked_balance)
 	addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
