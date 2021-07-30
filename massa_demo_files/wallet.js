@@ -119,11 +119,12 @@ walletInit= function() {
         // validate amount
         var sendamount= null;
         try {
-            sendamount = new Decimal(wallet_sendamount.value).times(1e9);
-            if(isNaN(sendamount) || sendamount < 0 || sendamount > (Math.pow(2, 64) - 1))
+            sendamount = new Decimal(parseInt(new Decimal(wallet_sendamount.value).times(1e9))).dividedBy(1e9);
+            let sendamount_mul = sendamount.times(1e9);
+            if(isNaN(sendamount_mul) || sendamount_mul < 0 || sendamount_mul > (Math.pow(2, 64) - 1))
                 throw "Invalid amount.";
             wallet_sendamount.removeAttribute("aria-invalid");
-            wallet_sendamount.value = sendamount.dividedBy(1e9);
+            wallet_sendamount.value = sendamount;
         } catch(e) {
             sendamount= null;
             wallet_sendamount.setAttribute("aria-invalid", "true");
@@ -134,11 +135,12 @@ walletInit= function() {
             if(wallet_sendfee.value == "") {
                 wallet_sendfee.value = 0;
             }
-            sendfee = new Decimal(wallet_sendfee.value).times(1e9);
-            if(isNaN(sendfee) || (sendfee < 0) || (sendfee > (Math.pow(2, 64) - 1)))
+            sendfee = new Decimal(parseInt(new Decimal(wallet_sendfee.value).times(1e9))).dividedBy(1e9);
+            let sendfee_mul = sendfee.times(1e9);
+            if(isNaN(sendfee_mul) || (sendfee_mul < 0) || (sendfee_mul > (Math.pow(2, 64) - 1)))
                 throw "Invalid fee.";
             wallet_sendfee.removeAttribute("aria-invalid");
-            wallet_sendfee.value = sendfee.dividedBy(1e9);
+            wallet_sendfee.value = sendfee;
         } catch(e) {
             sendfee= null;
             wallet_sendfee.setAttribute("aria-invalid", "true");
@@ -151,8 +153,8 @@ walletInit= function() {
             var confirm_message= "Transaction summary:\n"
                 + "\tFrom: " +  sendfromaddr + "\n"
                 + "\tTo: " +  sendtoaddr + "\n"
-                + "\tAmount: " +  (sendamount.dividedBy(1e9)) + " coins\n"
-                + "\tFee: " +  (sendfee.dividedBy(1e9)) + " coins\n"
+                + "\tAmount: " +  sendamount + " coins\n"
+                + "\tFee: " +  sendfee + " coins\n"
                 + "\nPlease confirm this transaction.";
             everythingok= confirm(confirm_message);
         }
@@ -161,16 +163,16 @@ walletInit= function() {
         if(everythingok) {
             try {
                 getLatestPeriod(function() {
-                    console.log('huzzah, I\'m done!');
+                    console.log('okay');
                 })
 
                 var transac = {"content": {"op": {"Transaction": {}}}}
 
                 transac.content["sender_public_key"] = sendfromb58cpubkey
-                transac.content["fee"] = parseInt(sendfee)
+                transac.content["fee"] = sendfee.toString()
                 transac.content["expire_period"] = latest_period + 5
                 transac.content.op.Transaction["recipient_address"] = sendtoaddr
-                transac.content.op.Transaction["amount"] = parseInt(sendamount)
+                transac.content.op.Transaction["amount"] = sendamount.toString()
                 
                 var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey), 16)
                 transac["signature"] = sign_content(transac, privkey)
@@ -192,8 +194,10 @@ walletInit= function() {
 
 function sign_content(transaction, privkey) {    
     // Compute bytes compact
-    var encoded_data = xbqcrypto.compute_bytes_compact(transaction.content.fee, transaction.content.expire_period,
-    transaction.content.sender_public_key, 0, transaction.content.op.Transaction.recipient_address, transaction.content.op.Transaction.amount)
+    let parsed_fee = parseInt(new Decimal(transaction.content.fee).times(1e9));
+    let parsed_amount = parseInt(new Decimal(transaction.content.op.Transaction.amount).times(1e9));
+    var encoded_data = xbqcrypto.compute_bytes_compact(parsed_fee, transaction.content.expire_period,
+    transaction.content.sender_public_key, 0, transaction.content.op.Transaction.recipient_address, parsed_amount)
 
     // Hash byte compact
     var hash_encoded_data = xbqcrypto.hash_sha256(encoded_data)
@@ -300,7 +304,7 @@ wallet_update_sendform= function() {
         if(res_amount == null)
             res_amount = '...';
         else {
-            res_amount = new Decimal(res_amount).dividedBy(1e9) 
+            res_amount = new Decimal(res_amount)
             res_amount = res_amount.toString();
         }
         var delkeyid= 'wallet_delkey_' + k;
@@ -448,8 +452,8 @@ walletUpdateBalancesInfo= function() {
             if(!resJson.hasOwnProperty(k))
                 continue;
             for (var k in wallet_addrs) {
-                wallet_addrs[k].balance = new Decimal(resJson[k].final_ledger_data.balance).dividedBy(1e9).toString();
-                wallet_addrs[k].candidate_balance = new Decimal(resJson[k].candidate_ledger_data.balance).dividedBy(1e9).toString();
+                wallet_addrs[k].balance = new Decimal(resJson[k].final_ledger_data.balance).toString();
+                wallet_addrs[k].candidate_balance = new Decimal(resJson[k].candidate_ledger_data.balance).toString();
                 var balancefield = document.getElementById('wallet_balance_'+k);
                 if(!balancefield)
                     continue;

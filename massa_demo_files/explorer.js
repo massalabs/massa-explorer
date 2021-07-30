@@ -590,9 +590,9 @@ explorerSetTransactionSearchTable= function(jsondata) {
 	if(operation_type=="Transaction") {
 		var tdc= addrow('To', null);
 		tdc.appendChild(createSearchLink(String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
-		var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount']).dividedBy(1e9)
+		var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount'])
 		addrow('Value', value);
-		var fee = new Decimal(jsondata[0][1]['op']['content']['fee']).dividedBy(1e9)
+		var fee = new Decimal(jsondata[0][1]['op']['content']['fee'])
 		addrow('Fee', fee);
 	}
 	addrow('In pool', jsondata[0][1]['in_pool']);
@@ -645,11 +645,11 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	addheader('Address ' + String(jsondata['what']));
 	
-	var balance = new Decimal(jsondata[jsondata.what].final_ledger_data.balance).dividedBy(1e9)
+	var balance = new Decimal(jsondata[jsondata.what].final_ledger_data.balance)
 	addrow('Final balance', balance);
-	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance).dividedBy(1e9)
+	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance)
 	addrow('Candidate balance', candidate_balance);
-	var locked_balance = jsondata[jsondata.what].locked_balance
+	var locked_balance = new Decimal(sondata[jsondata.what].locked_balance)
 	addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
