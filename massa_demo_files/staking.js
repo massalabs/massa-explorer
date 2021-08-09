@@ -281,9 +281,9 @@ stakingInfoSetTable = function(jsondata) {
     totstakers += 1
 
     items.forEach(function (item, index) {
-        if (index<500) {
-            addrow(createSearchLink(item[0]), item[1], Math.round(item[1] / totrolls * 100 * 100) / 100)
-        }
+        // if (index<500) {
+        addrow(createSearchLink(item[0]), item[1], Math.round(item[1] / totrolls * 100 * 100) / 100)
+        // }
     });
 
     document.getElementById('staking_totstakers').innerHTML= 'Number of stakers:&nbsp;<b>' + totstakers;
