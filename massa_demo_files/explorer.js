@@ -788,20 +788,19 @@ explorerSetInfo= function(jsondata) {
 	var seconds = "0" + date.getSeconds();
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
-	var n_nodes = 1
-	for (const [key, value] of Object.entries(jsondata['nodes']['peers'])) {
-		if(value['peer_info']['active_out_connections'] > 0 || value['peer_info']['active_in_connections'] > 0)
-			n_nodes += 1
-	}
+	// var n_nodes = 1
+	// for (const [key, value] of Object.entries(jsondata['nodes']['peers'])) {
+	// 	if(value['peer_info']['active_out_connections'] > 0 || value['peer_info']['active_in_connections'] > 0)
+	// 		n_nodes += 1
+	// }
 
 	data = jsondata;
 	div.innerHTML = '<span>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
-	Block Throughput: <b>' + data.final_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
-	Transaction Throughput: <b>' + data.final_operation_count / data.timespan * 1000 + ' tx/s' + '</b><br>\
+	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
+	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' tx/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
 	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
-	Number of Nodes: <b>' + n_nodes + '</b><br>\
 	Number of Stakers: <b>' + totstakers + '</b><br>\
 	Number of Rolls: <b>' + totrolls + '</b><br>\
 	</span>';

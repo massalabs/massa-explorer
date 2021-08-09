@@ -162,10 +162,6 @@ walletInit= function() {
         // generate transaction
         if(everythingok) {
             try {
-                getLatestPeriod(function() {
-                    console.log('okay');
-                })
-
                 var transac = {"content": {"op": {"Transaction": {}}}}
 
                 transac.content["sender_public_key"] = sendfromb58cpubkey
