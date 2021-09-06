@@ -336,7 +336,7 @@ explorerSearchAddress= function(what) {
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
 		if (resJson[resJson.what].final_ledger_data.balance != 0 || resJson[resJson.what].candidate_ledger_data.balance !=0 || resJson[resJson.what].locked_balance != 0 || resJson[resJson.what].final_rolls !=0 || resJson[resJson.what].active_rolls || resJson[resJson.what].candidate_rolls != 0) {
-			addressOperationsSearch(resJson)
+			explorerSearchCreatedBlocks(resJson)
 
 			explorerSearchAddressXhr= null;
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
@@ -356,6 +356,46 @@ explorerSearchAddress= function(what) {
 		}
 	}
 	explorerSearchAddressXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what), null, onresponse, onerror);
+}
+
+var explorerSearchCreatedBlocksXhr= null
+// var explorerSearchAddressTimeout= null
+explorerSearchCreatedBlocks= function(jsondata) {
+	// if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
+	if(explorerSearchCreatedBlocksXhr != null) { var tmp=explorerSearchCreatedBlocksXhr; explorerSearchCreatedBlocksXhr=null; tmp.abort(); }
+	
+	// var div= document.getElementById('explorerSearchResult');
+	// var statusdiv= document.getElementById('explorerSearchStatus');
+	
+	// if(first) {
+	// 	if(div) div.innerHTML= '';
+	// 	explorersearch= document.getElementById('explorersearch');
+	// 	if(explorersearch) { explorersearch.value= what; }
+	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
+	// }
+
+	function onresponse(resJson, xhr) {
+		// if (resJson[resJson.what].final_ledger_data.balance != 0 || resJson[resJson.what].candidate_ledger_data.balance !=0 || resJson[resJson.what].locked_balance != 0 || resJson[resJson.what].final_rolls !=0 || resJson[resJson.what].active_rolls || resJson[resJson.what].candidate_rolls != 0) {
+		jsondata['created_blocks'] = resJson
+		addressOperationsSearch(jsondata)
+
+		explorerSearchCreatedBlocksXhr= null;
+		// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
+
+		// }
+		// else
+		// 	requestsRemaining -= 1
+	}
+	function onerror(error, xhr) {
+		requestsRemaining -= 1
+		if(explorerSearchCreatedBlocksXhr != null) { 
+			explorerSearchCreatedBlocksXhr= null;
+			// var statusdiv= document.getElementById('explorerSearchStatus');
+			// if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
+			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
+		}
+	}
+	explorerSearchCreatedBlocksXhr = RESTRequest("GET", 'block_ids_by_creator/'+encodeURIComponent(jsondata['what']), null, onresponse, onerror);
 }
 
 var addressOperationsSearchXhr= null
@@ -469,7 +509,6 @@ explorerSetBlockSearchTable= function(jsondata) {
 		addrow('Period', jsondata.Active.header.content.slot['period'])
 		addrow('Signature', jsondata.Active.header['signature'])
 		
-		// TODO: Add operations
 		var operations = jsondata.Active.operations;
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
@@ -477,6 +516,11 @@ explorerSetBlockSearchTable= function(jsondata) {
 			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
 			var tdc= addrow('Transaction', null)
 			tdc.appendChild(createSearchLink(String(tx_id)));
+		}
+
+		var endorsements = jsondata.Active.header.content.endorsements
+		for(var i= 0 ; i < endorsements.length ; i++) {
+			var tdc = addrow('Endorsement ' + endorsements[i].content.index, String(endorsements[i].content.sender_public_key))
 		}
 		
 		parentIds = jsondata.Active.header.content['parents'];
@@ -663,6 +707,11 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	for (const [key, value] of Object.entries(jsondata['operations'])) {
 		var tdc = addrow('Transaction', null);
+		tdc.appendChild(createSearchLink(String(key)));
+	}
+
+	for (const [key, value] of Object.entries(jsondata['created_blocks'])) {
+		var tdc = addrow('Block (' + String(value) + ')', null);
 		tdc.appendChild(createSearchLink(String(key)));
 	}
 }
