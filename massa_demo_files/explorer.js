@@ -849,7 +849,7 @@ explorerSetInfo= function(jsondata) {
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' tx/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
-	Block Stale Rate: <b>' + data.stale_block_count / data.timespan * 1000 + ' b/s' + '</b><br>\
+	Block Stale Rate: <b>' + Math.round((data.stale_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Stakers: <b>' + totstakers + '</b><br>\
 	Number of Rolls: <b>' + totrolls + '</b><br>\
 	</span>';
