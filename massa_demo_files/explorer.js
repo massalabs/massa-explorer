@@ -529,15 +529,15 @@ explorerSetBlockSearchTable= function(jsondata) {
 			tdc.appendChild(createSearchLink(String(parentIds[i])));
 		}
 	}
-	else if (jsondata['Stored']) {
-		addrow('Status', 'Stored')
+	else if (jsondata['Final']) {
+		addrow('Status', 'Final')
 		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Stored.header.content['creator']))))
-		addrow('Thread', jsondata.Stored.header.content.slot['thread'])
-		addrow('Period', jsondata.Stored.header.content.slot['period'])
-		addrow('Signature', jsondata.Stored.header['signature'])
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Final.header.content['creator']))))
+		addrow('Thread', jsondata.Final.header.content.slot['thread'])
+		addrow('Period', jsondata.Final.header.content.slot['period'])
+		addrow('Signature', jsondata.Final.header['signature'])
 
-		var operations = jsondata.Stored.operations;
+		var operations = jsondata.Final.operations;
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
 			var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
@@ -546,7 +546,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 			tdc.appendChild(createSearchLink('T' + String(tx_id)));
 		}
 		
-		parentIds = jsondata.Stored.header.content['parents'];
+		parentIds = jsondata.Final.header.content['parents'];
 		for(var i= 0 ; i < parentIds.length ; i++) {
 			var tdc= addrow('Parent (thread ' + i + ')', null)
 			tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
