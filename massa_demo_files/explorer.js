@@ -1125,11 +1125,11 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		//Is the info present in the search results ?
 		if(explorerBlockSearchResult != null) {
 			// TODO
-			if((explorerBlockSearchResult['Active'] || explorerBlockSearchResult['Stored']) && explorerGetViewIntervalResult != null) {
+			if((explorerBlockSearchResult['Active'] || explorerBlockSearchResult['Final']) && explorerGetViewIntervalResult != null) {
 				if(explorerBlockSearchResult['Active'])
 					var status = 'Active'
 				else
-					var status = 'Stored'
+					var status = 'Final'
 				if(String(explorerBlockSearchResult['what']) == explorerViewSelId) {
 					drawLinesToTimestamps = []
 					for (var i=0 ; i < nthreads ; i++) {
