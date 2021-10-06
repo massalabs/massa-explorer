@@ -766,7 +766,7 @@ explorerUpdateInfo= function(first=true) {
 		// var statusdiv= document.getElementById('explorerInfoStatus');
 		// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 		explorerUpdateInfoXhr= null;
-		explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 3000, false)
+		explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 10000, false)
 	}
 	function onerror(error, xhr) {
 		if(explorerUpdateInfoXhr != null) { // yeah, otherwise we actually wanted it to die
