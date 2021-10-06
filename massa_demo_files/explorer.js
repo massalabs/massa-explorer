@@ -512,7 +512,9 @@ explorerSetBlockSearchTable= function(jsondata) {
 		var operations = jsondata.Active.operations;
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
-			var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
+			parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
+			parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
+			var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
 			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
 			var tdc= addrow('Transaction', null)
 			tdc.appendChild(createSearchLink(String(tx_id)));
@@ -540,8 +542,11 @@ explorerSetBlockSearchTable= function(jsondata) {
 		var operations = jsondata.Final.operations;
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
-			var op_bytes_compact = xbqcrypto.compute_bytes_compact(operations[i].content.fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, operations[i].content.op.Transaction.amount)
-			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+			parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
+			parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
+			var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
+			// var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.Buffer.from(operations[i].signature, "hex")])))
 			var tdc= addrow('Transaction', null)
 			tdc.appendChild(createSearchLink('T' + String(tx_id)));
 		}
