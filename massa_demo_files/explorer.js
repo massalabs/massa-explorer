@@ -548,13 +548,13 @@ explorerSetBlockSearchTable= function(jsondata) {
 			// var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
 			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.Buffer.from(operations[i].signature, "hex")])))
 			var tdc= addrow('Transaction', null)
-			tdc.appendChild(createSearchLink('T' + String(tx_id)));
+			tdc.appendChild(createSearchLink(String(tx_id)));
 		}
 		
 		parentIds = jsondata.Final.header.content['parents'];
 		for(var i= 0 ; i < parentIds.length ; i++) {
 			var tdc= addrow('Parent (thread ' + i + ')', null)
-			tdc.appendChild(createSearchLink('B' + String(parentIds[i])));
+			tdc.appendChild(createSearchLink(String(parentIds[i])));
 		}
 	}
 	else if (jsondata['Discarded']) {
