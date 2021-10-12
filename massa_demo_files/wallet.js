@@ -1,4 +1,5 @@
 latest_period = null
+current_cycle = null
 var walletUpdateLatestPeriodXhr= null
 var walletUpdateLatestPeriodTimeout= null
 getLatestPeriod = function() {
@@ -8,6 +9,7 @@ getLatestPeriod = function() {
         walletUpdateLatestPeriodXhr = null;
 
 		latest_period = resJson.latest_slot.period
+        current_cycle = resJson.current_cycle
         walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 10000, false)
 	}
 	function onerror(error, xhr) {

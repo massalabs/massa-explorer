@@ -851,10 +851,10 @@ explorerSetInfo= function(jsondata) {
 	data = jsondata;
 	div.innerHTML = '<span>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
-	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
+	Cycle: <b>' + current_cycle + '</b>, Period: <b>' + latest_period + '</b><br>\
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' tx/s' + '</b><br>\
+	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
-	Block Stale Rate: <b>' + Math.round((data.stale_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Stakers: <b>' + totstakers + '</b><br>\
 	Number of Rolls: <b>' + totrolls + '</b><br>\
 	</span>';
