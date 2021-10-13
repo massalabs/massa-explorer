@@ -1001,7 +1001,7 @@ explorerGetViewInterval= function() {
 	else
 		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
     
-    if explorerViewScrolling {
+    if(explorerViewScrolling) {
         explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_latest', null, onresponse, onerror);
     } else {
 	    // Rounding for cache
