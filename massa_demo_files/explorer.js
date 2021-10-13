@@ -1000,11 +1000,15 @@ explorerGetViewInterval= function() {
 	}
 	else
 		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
-
-	// Rounding for cache
-	viewStart = Math.floor(viewStart/500) * 500
-	viewEnd = Math.floor(viewEnd/500) * 500
-	explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_interval?start='+encodeURIComponent(viewStart)+'&end='+encodeURIComponent(viewEnd), null, onresponse, onerror);
+    
+    if explorerViewScrolling {
+        explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_latest', null, onresponse, onerror);
+    } else {
+	    // Rounding for cache
+	    viewStart = Math.floor(viewStart/500) * 500
+	    viewEnd = Math.floor(viewEnd/500) * 500
+	    explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_interval?start='+encodeURIComponent(viewStart)+'&end='+encodeURIComponent(viewEnd), null, onresponse, onerror);
+    }
 }
 
 explorerAutoLine = function(ctx, fromx, fromy, tox, toy, ctlshift) {
