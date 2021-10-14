@@ -35,7 +35,7 @@ explorerGetConfig= function() {
 	function onerror(error, xhr) {
 		if(explorerGetViewIntervalXhr != null) { // yeah, otherwise we actually wanted it to die
 			explorerGetViewIntervalXhr= null;
-			explorerGetViewIntervalTimeout= setTimeout(explorerGetConfig, 3000)
+			explorerGetViewIntervalTimeout= setTimeout(explorerGetConfig, 10000)
 		}
 	}
 
@@ -773,7 +773,7 @@ explorerUpdateInfo= function(first=true) {
 			explorerUpdateInfoXhr= null;
 			var statusdiv= document.getElementById('explorerInfoStatus');
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-			explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 3000, false)
+			explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 10000, false)
 		}
 	}
 	explorerUpdateInfoXhr= RESTRequest("GET", 'get_stats', null, onresponse, onerror);
@@ -896,9 +896,9 @@ explorerGetViewInterval= function() {
 		explorerGetViewIntervalResult = resJson
 		explorerUpdateInfoXhr= null;
 		if(explorerGetViewIntervalTimeout != null) { clearTimeout(explorerGetViewIntervalTimeout); explorerGetViewIntervalTimeout=null; }
-		var timeoutVal= 500; //TODO update less often if we are looking in the distant past
+		var timeoutVal= 1000; //TODO update less often if we are looking in the distant past
 		if(explorerViewDragging)
-			timeoutVal= 250; 
+			timeoutVal= 1000; 
 		explorerGetViewIntervalTimeout= setTimeout(explorerGetViewInterval, timeoutVal)
 		
 		// if(resJson != null && resJson.hasOwnProperty('timeStart') && resJson.hasOwnProperty('timeEnd') && resJson.hasOwnProperty('blockIds') && resJson.hasOwnProperty('threads') && resJson.hasOwnProperty('timestamps')) {

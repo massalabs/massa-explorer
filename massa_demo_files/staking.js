@@ -1,4 +1,4 @@
-staking_stakerlist= [];
+ostaking_stakerlist= [];
 staking_creatingstaker= false;
 staking_maxpower=null;
 stakingProcessCommands= function(pageid, cmds) {
@@ -310,7 +310,7 @@ stakingUpdateInfos = function(first=false) {
 			stakingUpdateInfosXhr= null;
 			var statusdiv= document.getElementById('stakerInfoStatus');
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 3000, false)
+			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 10000, false)
 		}
 	}
 	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);

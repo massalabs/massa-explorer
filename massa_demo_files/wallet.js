@@ -468,7 +468,7 @@ walletUpdateBalancesInfo= function() {
 	function onerror(error, xhr) {
 		if(walletUpdateBalancesXhr != null) { // yeah, otherwise we actually wanted it to die
 			walletUpdateBalancesXhr= null;
-			walletUpdateBalancesTimeout= setTimeout(walletUpdateBalancesInfo, 3000, false)
+			walletUpdateBalancesTimeout= setTimeout(walletUpdateBalancesInfo, 10000, false)
 		}
 	}
 
