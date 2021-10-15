@@ -783,7 +783,10 @@ var explorerStakingUpdateInfosXhr = null
 explorerStakingUpdateInfos = function(jsondata) {
 	function onresponse(resJson, xhr) {
 		jsondata['stakers'] = resJson
-        explorerNodesUpdateInfos(jsondata);
+        // explorerNodesUpdateInfos(jsondata);
+		explorerSetInfo(jsondata);
+		var statusdiv= document.getElementById('explorerInfoStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 	}
 	function onerror(error, xhr) {
 		if(explorerStakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
@@ -795,23 +798,23 @@ explorerStakingUpdateInfos = function(jsondata) {
 	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
 }
 
-var explorerNodesUpdateInfosXhr = null
-explorerNodesUpdateInfos = function(jsondata) {
-	function onresponse(resJson, xhr) {
-		jsondata['nodes'] = resJson
-        explorerSetInfo(jsondata);
-		var statusdiv= document.getElementById('explorerInfoStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-	}
-	function onerror(error, xhr) {
-		if(explorerNodesUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-			explorerNodesUpdateInfosXhr = null;
-			var statusdiv= document.getElementById('explorerInfoStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-		}
-	}
-	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
-}
+// var explorerNodesUpdateInfosXhr = null
+// explorerNodesUpdateInfos = function(jsondata) {
+// 	function onresponse(resJson, xhr) {
+// 		jsondata['nodes'] = resJson
+//         explorerSetInfo(jsondata);
+// 		var statusdiv= document.getElementById('explorerInfoStatus');
+// 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+// 	}
+// 	function onerror(error, xhr) {
+// 		if(explorerNodesUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
+// 			explorerNodesUpdateInfosXhr = null;
+// 			var statusdiv= document.getElementById('explorerInfoStatus');
+// 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
+// 		}
+// 	}
+// 	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
+// }
 
 explorerSetInfo= function(jsondata) {
 	var div= document.getElementById('explorerInfo');

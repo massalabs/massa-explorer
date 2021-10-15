@@ -1,4 +1,4 @@
-ostaking_stakerlist= [];
+staking_stakerlist= [];
 staking_creatingstaker= false;
 staking_maxpower=null;
 stakingProcessCommands= function(pageid, cmds) {
