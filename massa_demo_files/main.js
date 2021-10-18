@@ -34,8 +34,13 @@ initPages= function() {
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
-	var url= "https://test.massa.net/api/v1/"+resource;
-
+	if(resource == "graph_latest") {
+		var url= "http://127.0.0.1:5000/latest_blocks";
+	}
+	else {
+		var url= "https://test.massa.net/api/v1/"+resource;
+	}
+	// var url= "https://test.massa.net/api/v1/"+resource;
 	console.log(url)
 
 	xhr.open(method, url, true);
