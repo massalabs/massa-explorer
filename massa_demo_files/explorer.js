@@ -795,7 +795,7 @@ explorerStakingUpdateInfos = function(jsondata) {
 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
 		}
 	}
-	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+	stakingUpdateInfosXhr= RESTRequest("GET", 'stakers_info', null, onresponse, onerror);
 }
 
 // var explorerNodesUpdateInfosXhr = null
@@ -820,20 +820,20 @@ explorerSetInfo= function(jsondata) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
 
-	// Create items array
-    var items = Object.keys(jsondata['stakers']).map(function(key) {
-	return [key, jsondata['stakers'][key]];
-	});
-	// Sort the array based on the second element
-	items.sort(function(first, second) {
-	return second[1] - first[1];
-	});
-	var totstakers = 0
-	var totrolls = 0
-	items.forEach(function (item, index) {
-		totstakers += 1
-		totrolls += item[1]
-	});
+	// // Create items array
+    // var items = Object.keys(jsondata['stakers']).map(function(key) {
+	// return [key, jsondata['stakers'][key]];
+	// });
+	// // Sort the array based on the second element
+	// items.sort(function(first, second) {
+	// return second[1] - first[1];
+	// });
+	// var totstakers = 0
+	// var totrolls = 0
+	// items.forEach(function (item, index) {
+	// 	totstakers += 1
+	// 	totrolls += item[1]
+	// });
 
 	var date = new Date(explorerGenesisTimestamp);
 	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -845,12 +845,6 @@ explorerSetInfo= function(jsondata) {
 	var seconds = "0" + date.getSeconds();
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
-	// var n_nodes = 1
-	// for (const [key, value] of Object.entries(jsondata['nodes']['peers'])) {
-	// 	if(value['peer_info']['active_out_connections'] > 0 || value['peer_info']['active_in_connections'] > 0)
-	// 		n_nodes += 1
-	// }
-
 	data = jsondata;
 	div.innerHTML = '<span>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
@@ -858,16 +852,9 @@ explorerSetInfo= function(jsondata) {
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' tx/s' + '</b><br>\
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
-	Number of Stakers: <b>' + totstakers + '</b><br>\
-	Number of Rolls: <b>' + totrolls + '</b><br>\
+	Number of Stakers: <b>' + data.stakers.n_stakers + '</b><br>\
+	Number of Rolls: <b>' + data.stakers.n_rolls + '</b><br>\
 	</span>';
-
-	// Number of final blocks: <b>' + data.final_block_count + '</b><br>\
-	// Time of Simulation: <b>' + data.timespan + '</b><br>\
-	// Block Throughput: <b>' + data.finalBps + ' b/s' + '</b><br>\
-	// Average Transaction Time: <b>' + Math.round(data.avgTimeTx * 10) / 10 + ' sec' + '</b><br>\
-	// Total Stake: <b>' + data.totalStakes + '</b><br>\
-	// Number of Stakers: <b>' + data.nStakers + '</b><br>\
 	
 	finished_loading('wallet_info');
 }
