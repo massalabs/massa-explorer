@@ -904,25 +904,44 @@ explorerGetViewInterval= function() {
 					timestamp: (explorerGenesisTimestamp + (resJson[i][1].period + resJson[i][1].thread/nthreads) * explorerT0) / 1000,
 					status: resJson[i][2],
 					parents: resJson[i][3]} );
-			}
-
-			if(explorerViewScrolling && explorerViewIntervalBlocks.length > 0) {
-
-				lastblc = explorerViewIntervalBlocks[0]
-				explorerMaxPeriod = explorerViewIntervalBlocks[0].period
-				explorerMaxThread = explorerViewIntervalBlocks[0].thread
-				for(var i = 0 ; i < explorerViewIntervalBlocks.length ; i++) {
+				if (i==0) {
+					lastblc = explorerViewIntervalBlocks[0]
+					explorerMaxPeriod = explorerViewIntervalBlocks[0].period
+					explorerMaxThread = explorerViewIntervalBlocks[0].thread
+				}
+				else {
 					if (parseInt(explorerViewIntervalBlocks[i].period) > explorerMaxPeriod) {
 						explorerMaxPeriod = explorerViewIntervalBlocks[i].period
 						explorerMaxThread = explorerViewIntervalBlocks[i].thread
 						lastblc = explorerViewIntervalBlocks[i]
-					} else if (parseInt(explorerViewIntervalBlocks[i].period) == explorerMaxPeriod) {
+					}
+					else if (parseInt(explorerViewIntervalBlocks[i].period) == explorerMaxPeriod) {
 						if (parseInt(explorerViewIntervalBlocks[i].thread) > explorerMaxThread) {
 							explorerMaxThread = explorerViewIntervalBlocks[i].thread
 							lastblc = explorerViewIntervalBlocks[i]
 						}
-					} else {}
+					}
+					else {}
 				}
+			}
+
+			if(explorerViewScrolling && explorerViewIntervalBlocks.length > 0) {
+
+				// lastblc = explorerViewIntervalBlocks[0]
+				// explorerMaxPeriod = explorerViewIntervalBlocks[0].period
+				// explorerMaxThread = explorerViewIntervalBlocks[0].thread
+				// for(var i = 0 ; i < explorerViewIntervalBlocks.length ; i++) {
+				// 	if (parseInt(explorerViewIntervalBlocks[i].period) > explorerMaxPeriod) {
+				// 		explorerMaxPeriod = explorerViewIntervalBlocks[i].period
+				// 		explorerMaxThread = explorerViewIntervalBlocks[i].thread
+				// 		lastblc = explorerViewIntervalBlocks[i]
+				// 	} else if (parseInt(explorerViewIntervalBlocks[i].period) == explorerMaxPeriod) {
+				// 		if (parseInt(explorerViewIntervalBlocks[i].thread) > explorerMaxThread) {
+				// 			explorerMaxThread = explorerViewIntervalBlocks[i].thread
+				// 			lastblc = explorerViewIntervalBlocks[i]
+				// 		}
+				// 	} else {}
+				// }
 
 				// lastblc = explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1]
 	            lastblc.timestampParents = []
@@ -992,7 +1011,7 @@ explorerGetViewInterval= function() {
 		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
     
     if(explorerViewScrolling) {
-        explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_latest', null, onresponse, onerror);
+        explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
     } else {
 	    // Rounding for cache
 	    viewStart = Math.floor(viewStart/500) * 500
@@ -1134,8 +1153,9 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-								if (explorerBlockSearchResult[status].header.content.parents[i] == explorerGetViewIntervalResult[j][0]) {
-									parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
+								if (explorerBlockSearchResult[status].header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
+									// parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
+									parentTimestamp = explorerViewIntervalBlocks[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
