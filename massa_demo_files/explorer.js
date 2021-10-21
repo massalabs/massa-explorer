@@ -761,10 +761,10 @@ explorerUpdateInfo= function(first=true) {
 	if(first && statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading infos...'; }
 
 	function onresponse(resJson, xhr) {
-		explorerStakingUpdateInfos(resJson)
-		// explorerSetInfo(resJson);
-		// var statusdiv= document.getElementById('explorerInfoStatus');
-		// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		// explorerStakingUpdateInfos(resJson)
+		var statusdiv= document.getElementById('explorerInfoStatus');
+		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		explorerSetInfo(resJson);
 		explorerUpdateInfoXhr= null;
 		explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 10000, false)
 	}
@@ -776,7 +776,7 @@ explorerUpdateInfo= function(first=true) {
 			explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 10000, false)
 		}
 	}
-	explorerUpdateInfoXhr= RESTRequest("GET", 'get_stats', null, onresponse, onerror);
+	explorerUpdateInfoXhr= RESTRequest("GET", 'info', null, onresponse, onerror);
 }
 
 var explorerStakingUpdateInfosXhr = null
@@ -816,7 +816,7 @@ explorerStakingUpdateInfos = function(jsondata) {
 // 	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
 // }
 
-explorerSetInfo= function(jsondata) {
+explorerSetInfo= function(data) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
 
@@ -845,15 +845,14 @@ explorerSetInfo= function(jsondata) {
 	var seconds = "0" + date.getSeconds();
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
-	data = jsondata;
 	div.innerHTML = '<span>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
 	Cycle: <b>' + current_cycle + '</b>, Period: <b>' + latest_period + '</b><br>\
-	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' tx/s' + '</b><br>\
+	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON)) + ' tx/s' + '</b><br>\
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
-	Number of Stakers: <b>' + data.stakers.n_stakers + '</b><br>\
-	Number of Rolls: <b>' + data.stakers.n_rolls + '</b><br>\
+	Number of Stakers: <b>' + data.n_stakers + '</b><br>\
+	Number of Rolls: <b>' + data.n_rolls + '</b><br>\
 	</span>';
 	
 	finished_loading('wallet_info');
@@ -886,7 +885,7 @@ explorerGetViewInterval= function() {
 		explorerGetViewIntervalResult = resJson
 		explorerUpdateInfoXhr= null;
 		if(explorerGetViewIntervalTimeout != null) { clearTimeout(explorerGetViewIntervalTimeout); explorerGetViewIntervalTimeout=null; }
-		var timeoutVal= 1000; //TODO update less often if we are looking in the distant past
+		var timeoutVal= 1000; // update less often if we are looking in the distant past
 		if(explorerViewDragging)
 			timeoutVal= 1000; 
 		explorerGetViewIntervalTimeout= setTimeout(explorerGetViewInterval, timeoutVal)
@@ -903,58 +902,21 @@ explorerGetViewInterval= function() {
 					blockId: String(resJson[i][0]),
 					timestamp: (explorerGenesisTimestamp + (resJson[i][1].period + resJson[i][1].thread/nthreads) * explorerT0) / 1000,
 					status: resJson[i][2],
-					parents: resJson[i][3]} );
-				if (i==0) {
-					lastblc = explorerViewIntervalBlocks[0]
-					explorerMaxPeriod = explorerViewIntervalBlocks[0].period
-					explorerMaxThread = explorerViewIntervalBlocks[0].thread
-				}
-				else {
-					if (parseInt(explorerViewIntervalBlocks[i].period) > explorerMaxPeriod) {
-						explorerMaxPeriod = explorerViewIntervalBlocks[i].period
-						explorerMaxThread = explorerViewIntervalBlocks[i].thread
-						lastblc = explorerViewIntervalBlocks[i]
-					}
-					else if (parseInt(explorerViewIntervalBlocks[i].period) == explorerMaxPeriod) {
-						if (parseInt(explorerViewIntervalBlocks[i].thread) > explorerMaxThread) {
-							explorerMaxThread = explorerViewIntervalBlocks[i].thread
-							lastblc = explorerViewIntervalBlocks[i]
-						}
-					}
-					else {}
-				}
+					parents: resJson[i][3]});
 			}
 
 			if(explorerViewScrolling && explorerViewIntervalBlocks.length > 0) {
 
-				// lastblc = explorerViewIntervalBlocks[0]
-				// explorerMaxPeriod = explorerViewIntervalBlocks[0].period
-				// explorerMaxThread = explorerViewIntervalBlocks[0].thread
-				// for(var i = 0 ; i < explorerViewIntervalBlocks.length ; i++) {
-				// 	if (parseInt(explorerViewIntervalBlocks[i].period) > explorerMaxPeriod) {
-				// 		explorerMaxPeriod = explorerViewIntervalBlocks[i].period
-				// 		explorerMaxThread = explorerViewIntervalBlocks[i].thread
-				// 		lastblc = explorerViewIntervalBlocks[i]
-				// 	} else if (parseInt(explorerViewIntervalBlocks[i].period) == explorerMaxPeriod) {
-				// 		if (parseInt(explorerViewIntervalBlocks[i].thread) > explorerMaxThread) {
-				// 			explorerMaxThread = explorerViewIntervalBlocks[i].thread
-				// 			lastblc = explorerViewIntervalBlocks[i]
-				// 		}
-				// 	} else {}
-				// }
-
-				// lastblc = explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1]
+				lastblc = explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1]
 	            lastblc.timestampParents = []
 
 	            for (var i=0 ; i < nthreads ; i++) {
-            		// TODO
             		parentTimestamp = null
-            		for (var j=0 ; j < resJson.length ; j++) {
-  						if (lastblc.parents[i] == resJson[j][0]) {
-  							parentTimestamp = (explorerGenesisTimestamp + (resJson[j][1].period + resJson[j][1].thread/nthreads) * explorerT0) / 1000
+            		for (var j=0 ; j < explorerViewIntervalBlocks.length ; j++) {
+  						if (lastblc.parents[i] == explorerViewIntervalBlocks[j].blockId) {
+							lastblc.timestampParents.push(explorerViewIntervalBlocks[j].timestamp)
 						}
 					}
-            		lastblc.timestampParents.push(parentTimestamp)
 	            }
 				
 				if(explorerViewLastBlockId != lastblc.blockId) {
@@ -968,23 +930,17 @@ explorerGetViewInterval= function() {
 			explorerViewTimestampAtLastEnd= explorerCurViewTimestamp;
 			if(explorerViewScrolling) {
 				if(explorerViewKeypointEnd == null || explorerViewTimestampAtKeypointEnd == null) {
-					// TODO
-					// explorerViewKeypointEnd= resJson.timeEnd;
 					explorerViewKeypointEnd= Date.now() / 1000
 					explorerViewTimestampAtKeypointEnd= explorerCurViewTimestamp;
 				}
 			}
 			if(explorerViewEnd == null)
-				// TODO
-				// explorerViewEnd= resJson.timeEnd;
 				explorerViewEnd= Date.now() / 1000
 		}
-		// }
-		// }
-		// else {
-		//     if(resJson != null)
-		//         console.log('Explorer format error.');
-	    // }
+		else {
+		    if(resJson != null)
+		        console.log('Explorer format error.');
+	    }
 	    finished_loading('explorer_graph');
 	}
 	function onerror(error, xhr) {
@@ -1142,7 +1098,6 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	
 		//Is the info present in the search results ?
 		if(explorerBlockSearchResult != null) {
-			// TODO
 			if((explorerBlockSearchResult['Active'] || explorerBlockSearchResult['Final']) && explorerGetViewIntervalResult != null) {
 				if(explorerBlockSearchResult['Active'])
 					var status = 'Active'
@@ -1154,7 +1109,6 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
 								if (explorerBlockSearchResult[status].header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
-									// parentTimestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[j][1].period + explorerGetViewIntervalResult[j][1].thread/nthreads) * explorerT0) / 1000
 									parentTimestamp = explorerViewIntervalBlocks[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
