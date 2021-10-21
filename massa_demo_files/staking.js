@@ -303,7 +303,7 @@ stakingUpdateInfos = function(first=false) {
 		var statusdiv = document.getElementById('stakerSearchStatus');
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 		stakingUpdateInfosXhr = null;
-		stakingUpdateInfosTimeout = setTimeout(stakingUpdateInfos, 10000, false)
+		stakingUpdateInfosTimeout = setTimeout(stakingUpdateInfos, 100000, false)
 	}
 	function onerror(error, xhr) {
 		if(stakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die

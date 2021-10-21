@@ -10,7 +10,7 @@ getLatestPeriod = function() {
 
 		latest_period = resJson.latest_slot.period
         current_cycle = resJson.current_cycle
-        walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 10000, false)
+        walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 30000, false)
 	}
 	function onerror(error, xhr) {
 		if(walletUpdateLatestPeriodXhr != null) { // yeah, otherwise we actually wanted it to die
