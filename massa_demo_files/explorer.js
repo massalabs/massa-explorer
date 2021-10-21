@@ -193,7 +193,7 @@ explorerSearch = function(what, first=true) {
 		explorerSearchTransaction(what)
 		explorerSearchAddress(what)
 		explorerSearchStatus(first)
-		explorerSearchTimeout = setTimeout(explorerSearch, 10000, what, false)
+		explorerSearchTimeout = setTimeout(explorerSearch, 20000, what, false)
 	}
 }
 
