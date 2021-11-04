@@ -313,6 +313,8 @@ stakingUpdateInfos = function(first=false) {
 			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 10000, false)
 		}
 	}
-	stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+	// stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
+    data = []
+    stakingUpdateInfosXhr = JsonRPCRequest('get_stakers', data, onresponse, onerror);
 }
 stakingUpdateInfos(first=true)

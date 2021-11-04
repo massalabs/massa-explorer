@@ -31,6 +31,38 @@ initPages= function() {
 	// stakingInit();
 }
 
+JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
+	var data = JSON.stringify({
+		"jsonrpc": "2.0",
+		"method": resource,
+		"params": data,
+		"id": 3
+	  });
+	  
+	  var xhr = new XMLHttpRequest();
+	  xhr.withCredentials = true;
+	  
+	  xhr.addEventListener("readystatechange", function() {
+		if(this.readyState === 4) {
+			if(this.status === 200) {
+				try {
+					var response= JSON.parse(this.responseText);
+				} catch(e) {
+					error_callback('JSON.parse error: ' + String(e), this) ;
+				}
+				completion_callback(response.result, this);
+			}
+			else {
+				error_callback('XMLHttpRequest error: ' + String(this.statusText), this);  
+			}
+		}
+	  });
+	  
+	  xhr.open("POST", "https://test.massa.net/api/v2");
+	  xhr.setRequestHeader("Content-Type", "application/json");
+	  
+	  xhr.send(data);
+}
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
