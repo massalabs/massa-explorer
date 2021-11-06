@@ -816,8 +816,7 @@ explorerGetViewInterval= function() {
 	if(explorerViewEnd != null) {
 		viewStart = Math.floor((explorerViewEnd - explorerViewTimespan - explorerViewTimePad) * 1000)
 		viewEnd = Math.ceil((explorerViewEnd + explorerViewTimePad) * 1000)
-		if(viewStart < 0) viewStart= 0
-		if(viewEnd < 0) viewEnd= 0
+		if(viewStart < 0) viewStart = 0
 	}
 	else {
 		viewEnd = Date.now()
@@ -826,16 +825,18 @@ explorerGetViewInterval= function() {
     
     if(explorerViewScrolling) {
         explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
-		// data = {"start": viewStart,
-		// 		"end": viewEnd}
-		// explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
     } else {
-	    // Rounding for cache
-	    viewStart = Math.floor(viewStart/500) * 500
-	    viewEnd = Math.floor(viewEnd/500) * 500
-		data = {"start": viewStart,
-				"end": viewEnd}
-		explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
+		if(viewEnd > Date.now()) {
+			explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
+		}
+		else {
+			// Rounding for cache
+			viewStart = Math.floor(viewStart/500) * 500
+			viewEnd = Math.floor(viewEnd/500) * 500
+			data = {"start": viewStart,
+					"end": viewEnd}
+			explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
+		}
     }
 }
 
