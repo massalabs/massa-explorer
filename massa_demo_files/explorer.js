@@ -687,61 +687,9 @@ explorerUpdateInfo= function(first=true) {
 	explorerUpdateInfoXhr= RESTRequest("GET", 'info', null, onresponse, onerror);
 }
 
-// var explorerStakingUpdateInfosXhr = null
-// explorerStakingUpdateInfos = function(jsondata) {
-// 	function onresponse(resJson, xhr) {
-// 		jsondata['stakers'] = resJson
-//         // explorerNodesUpdateInfos(jsondata);
-// 		explorerSetInfo(jsondata);
-// 		var statusdiv= document.getElementById('explorerInfoStatus');
-// 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-// 	}
-// 	function onerror(error, xhr) {
-// 		if(explorerStakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-// 			explorerStakingUpdateInfosXhr = null;
-// 			var statusdiv= document.getElementById('explorerInfoStatus');
-// 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-// 		}
-// 	}
-// 	stakingUpdateInfosXhr= RESTRequest("GET", 'stakers_info', null, onresponse, onerror);
-// }
-
-// var explorerNodesUpdateInfosXhr = null
-// explorerNodesUpdateInfos = function(jsondata) {
-// 	function onresponse(resJson, xhr) {
-// 		jsondata['nodes'] = resJson
-//         explorerSetInfo(jsondata);
-// 		var statusdiv= document.getElementById('explorerInfoStatus');
-// 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-// 	}
-// 	function onerror(error, xhr) {
-// 		if(explorerNodesUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-// 			explorerNodesUpdateInfosXhr = null;
-// 			var statusdiv= document.getElementById('explorerInfoStatus');
-// 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-// 		}
-// 	}
-// 	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
-// }
-
 explorerSetInfo= function(data) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
-
-	// // Create items array
-    // var items = Object.keys(jsondata['stakers']).map(function(key) {
-	// return [key, jsondata['stakers'][key]];
-	// });
-	// // Sort the array based on the second element
-	// items.sort(function(first, second) {
-	// return second[1] - first[1];
-	// });
-	// var totstakers = 0
-	// var totrolls = 0
-	// items.forEach(function (item, index) {
-	// 	totstakers += 1
-	// 	totrolls += item[1]
-	// });
 
 	var date = new Date(explorerGenesisTimestamp);
 	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -865,21 +813,16 @@ explorerGetViewInterval= function() {
 		}
 	}
 
-	if(explorerViewScrolling) {
-		// viewStart= - explorerViewTimespan - explorerViewTimePad
-		// viewEnd= -1
-		// TODO
-		viewEnd = Date.now()
-		viewStart = viewEnd - (explorerViewTimespan + explorerViewTimePad) * 1000
-	}
-	else if(explorerViewEnd != null) {
+	if(explorerViewEnd != null) {
 		viewStart = Math.floor((explorerViewEnd - explorerViewTimespan - explorerViewTimePad) * 1000)
 		viewEnd = Math.ceil((explorerViewEnd + explorerViewTimePad) * 1000)
 		if(viewStart < 0) viewStart= 0
 		if(viewEnd < 0) viewEnd= 0
 	}
-	else
-		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
+	else {
+		viewEnd = Date.now()
+		viewStart = viewEnd - (explorerViewTimespan + explorerViewTimePad) * 1000
+	}
     
     if(explorerViewScrolling) {
         explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
@@ -893,7 +836,6 @@ explorerGetViewInterval= function() {
 		data = {"start": viewStart,
 				"end": viewEnd}
 		explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
-	    // explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_interval?start='+encodeURIComponent(viewStart)+'&end='+encodeURIComponent(viewEnd), null, onresponse, onerror);
     }
 }
 
@@ -983,9 +925,6 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		var drawLinesFromThread= null, drawLinesFromTimestamp= null, drawLinesToTimestamps= null;
 
 		if(explorerViewIntervalBlocks.length > 0) {
-			// if(explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1].hasOwnProperty('timestampParents')) {
-			// 	var blc= explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1];
-			// TODO
 			drawLinesToTimestamps = lastblc.timestampParents
 			drawLinesFromThread = lastblc.thread
 			drawLinesFromTimestamp = lastblc.timestamp

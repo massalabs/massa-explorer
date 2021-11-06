@@ -36,11 +36,13 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 		"jsonrpc": "2.0",
 		"method": resource,
 		"params": data,
-		"id": 3
+		"id": 0
 	  });
-	  
+
 	  var xhr = new XMLHttpRequest();
 	  xhr.withCredentials = true;
+
+	  console.log(resource)
 	  
 	  xhr.addEventListener("readystatechange", function() {
 		if(this.readyState === 4) {
@@ -50,7 +52,12 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 				} catch(e) {
 					error_callback('JSON.parse error: ' + String(e), this) ;
 				}
-				completion_callback(response.result, this);
+				if ("error" in response) {
+					error_callback(response.error, this) ;
+				}
+				else {
+					completion_callback(response.result, this);
+				}
 			}
 			else {
 				error_callback('XMLHttpRequest error: ' + String(this.statusText), this);  
@@ -62,11 +69,12 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 	  xhr.setRequestHeader("Content-Type", "application/json");
 	  
 	  xhr.send(data);
+	  return xhr
 }
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
-	var url= "https://test.massa.net/api/v1/"+resource;
+	var url= "https://test.massa.net/api/v2/"+resource;
 	console.log(url)
 
 	xhr.open(method, url, true);

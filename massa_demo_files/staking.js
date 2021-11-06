@@ -172,40 +172,6 @@ stakingDisplayCreatestaker= function() {
     }
 }
 
-// var stakingCreatestakerXhr= null;
-// var stakingCreatestakerTimeout= null;
-// stakingCreatestaker= function(data) {
-// 	if(stakingCreatestakerTimeout != null) { clearTimeout(stakingCreatestakerTimeout); stakingCreatestakerTimeout=null; }
-// 	if(stakingCreatestakerXhr != null) { var tmp=stakingCreatestakerXhr; stakingCreatestakerXhr=null; tmp.abort(); }
-	
-// 	function onresponse(resJson, xhr) {
-// 		stakingCreatestakerXhr= null;
-// 		if(resJson.result == "OK") {
-// 		    alert("Staker successfully created:\n" + resJson.stakerId);
-// 		    stakingAddStakerToList(resJson.stakerId);
-// 		    staking_create_staker_form.reset();
-// 		} else {
-// 		    alert('An error occured while creating staker: ' + resJson.errorMessage + '. staker not created.');
-// 		}
-// 	    staking_creatingstaker= false;
-// 	    stakingDisplayCreatestaker();
-// 	}
-// 	function onerror(error, xhr) {
-// 		if(stakingCreatestakerXhr != null) { // yeah, otherwise we actually wanted it to die
-// 			stakingCreatestakerXhr= null;
-// 			if(confirm('An network error occured while creating the staker: '+ error +'. Retry ?')) {
-// 			    stakingCreatestaker(data);
-// 			} else {
-// 			    staking_creatingstaker= false;
-// 			    stakingDisplayCreatestaker();
-// 			}
-// 		}
-// 	}
-// 	staking_creatingstaker= true;
-// 	stakingDisplayCreatestaker();
-// 	walletSendTransactionXhr= RESTRequest("PUT", 'createStaker', data, onresponse, onerror);
-// }
-
 stakingInfoResult = null
 stakingInfoSetTable = function(jsondata) {
 	stakingInfoResult = jsondata
@@ -313,7 +279,6 @@ stakingUpdateInfos = function(first=false) {
 			stakingUpdateInfosTimeout= setTimeout(stakingUpdateInfos, 10000, false)
 		}
 	}
-	// stakingUpdateInfosXhr= RESTRequest("GET", 'active_stakers', null, onresponse, onerror);
     data = []
     stakingUpdateInfosXhr = JsonRPCRequest('get_stakers', data, onresponse, onerror);
 }

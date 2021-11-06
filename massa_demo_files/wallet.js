@@ -1,27 +1,3 @@
-// latest_period = null
-// current_cycle = null
-// var walletUpdateLatestPeriodXhr= null
-// var walletUpdateLatestPeriodTimeout= null
-// getLatestPeriod = function() {
-//     if(walletUpdateLatestPeriodTimeout != null) { clearTimeout(walletUpdateLatestPeriodTimeout); walletUpdateLatestPeriodTimeout=null; }
-// 	if(walletUpdateLatestPeriodXhr != null) { var tmp=walletUpdateLatestPeriodXhr; walletUpdateLatestPeriodXhr=null; tmp.abort(); }
-// 	function onresponse(resJson, xhr) {
-//         walletUpdateLatestPeriodXhr = null;
-
-// 		latest_period = resJson.latest_slot.period
-//         current_cycle = resJson.current_cycle
-//         walletUpdateLatestPeriodTimeout= setTimeout(getLatestPeriod, 30000, false)
-// 	}
-// 	function onerror(error, xhr) {
-// 		if(walletUpdateLatestPeriodXhr != null) { // yeah, otherwise we actually wanted it to die
-// 			walletUpdateLatestPeriodXhr = null;
-//             walletUpdateLatestPeriodTimeout = setTimeout(getLatestPeriod, 10000, false)
-// 		}
-// 	}
-// 	RESTRequest("GET", "state", null, onresponse, onerror);
-// }
-// getLatestPeriod()
-
 wallet_addrs= {};
 wallet_empty= true;
 wallet_sending= false;
@@ -432,8 +408,6 @@ walletSendTransaction= function(data) {
 			}
 		}
 	}
-    // data = JSON.stringify([data])
-    // walletSendTransactionXhr = RESTRequest("POST", 'send_operations', data, onresponse, onerror);
     explorerGetViewIntervalXhr = JsonRPCRequest('send_operations', [[data]], onresponse, onerror);
 }
 
@@ -473,18 +447,13 @@ walletUpdateBalancesInfo= function() {
 		}
 	}
 
-    // var reqval= '';
-    // var idx = 0
     var reqval = []
 	for (var k in wallet_addrs) {
         if(!wallet_addrs.hasOwnProperty(k))
             continue;
         reqval.push(k)
-	    // reqval += (reqval == '' ? '?addrs[' + encodeURIComponent(idx) +']=' : '&addrs[' + encodeURIComponent(idx) +']=') + encodeURIComponent(k);
-        // idx += 1
     }
 	if(reqval != '')
-        // walletUpdateBalancesXhr= RESTRequest("GET", 'addresses_info' + reqval, null, onresponse, onerror);
         data = reqval
         explorerGetViewIntervalXhr = JsonRPCRequest('get_addresses', [data], onresponse, onerror);
 }
