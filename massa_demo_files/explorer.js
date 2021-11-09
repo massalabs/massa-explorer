@@ -455,6 +455,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 		addrow('Thread', jsondata.block.header.content.slot['thread'])
 		addrow('Period', jsondata.block.header.content.slot['period'])
 		addrow('Signature', jsondata.block.header['signature'])
+		addrow('Endorsement Count', jsondata.block.header.content.endorsements.length)
 
 		var operations = jsondata.block.operations;
 		addrow('Op. Count', operations.length)
@@ -488,6 +489,14 @@ explorerSetBlockSearchTable= function(jsondata) {
 			}
 		}
 		
+		for (var i=0; i<jsondata.block.header.content.endorsements.length; i++) {
+			// TODO: Move to endorsement id when endpoint is present.
+			var endorser_pubkey = jsondata.block.header.content.endorsements[i].content.sender_public_key
+			var endorser_address = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.base58check_decode(endorser_pubkey)))
+			var tdc= addrow('Endorsement', null)
+			tdc.appendChild(createSearchLink(endorser_address));
+		}
+
 		parentIds = jsondata.block.header.content['parents'];
 		for(var i= 0 ; i < parentIds.length ; i++) {
 			var tdc= addrow('Parent (thread ' + i + ')', null)
@@ -636,14 +645,12 @@ explorerSetAddressSearchTable= function(jsondata) {
 	var candidate_rolls = jsondata[0].rolls.candidate_rolls
 	addrow('Candidate rolls', candidate_rolls);
 
-	// TODO
 	for (var i = 0 ; i <jsondata[0].involved_in_operations.length; i++) {
-		var tdc = addrow('Transaction', null);
+		var tdc = addrow('Operation', null);
 		tdc.appendChild(createSearchLink(String(jsondata[0].involved_in_operations[i])));
 	}
 
 	for(var i = 0 ; i < jsondata[0].blocks_created.length ; i++) {
-	// for (const [key, value] of Object.entries(jsondata[0].blocks_created)) {
 		var tdc = addrow('Block', null);
 		tdc.appendChild(createSearchLink(String(jsondata[0].blocks_created[i])));
 	}
