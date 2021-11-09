@@ -28,9 +28,9 @@ explorerGenesisTimestamp = null
 explorerT0 = null
 explorerGetConfig= function() {
 	function onresponse(resJson, xhr) {
-		nthreads = resJson.thread_count
-		explorerGenesisTimestamp = resJson.genesis_timestamp
-		explorerT0 = resJson.t0
+		nthreads = resJson.algo_config.thread_count
+		explorerGenesisTimestamp = resJson.algo_config.genesis_timestamp
+		explorerT0 = resJson.algo_config.t0
 	}
 	function onerror(error, xhr) {
 		if(explorerGetViewIntervalXhr != null) { // yeah, otherwise we actually wanted it to die
@@ -38,8 +38,8 @@ explorerGetConfig= function() {
 			explorerGetViewIntervalTimeout= setTimeout(explorerGetConfig, 10000)
 		}
 	}
-
-	RESTRequest("GET", 'consensus_config', null, onresponse, onerror);
+	data = []
+	JsonRPCRequest('get_status', data, onresponse, onerror);
 }
 explorerGetConfig()
 
@@ -235,28 +235,28 @@ explorerSearchBlock= function(what) {
 	// }
 
 	function onresponse(resJson, xhr) {
+		resJson = resJson
 		requestsRemaining -= 1
 		requestsSuccess += 1
 		explorerViewSelId= what
 		resJson['what'] = what
 
-		explorerSetBlockSearchTable(resJson);
-		// var statusdiv= document.getElementById('explorerSearchStatus');
-		// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		if (resJson.content != null) {
+			explorerSetBlockSearchTable(resJson);
+			// var statusdiv= document.getElementById('explorerSearchStatus');
+			// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
-		explorerSearchBlockXhr= null;
-		// explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 10000, what, false)
-		
-		if(explorerViewSelCenter) {
-			if(resJson['Active'])
-				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Active.header.content.slot.period + resJson.Active.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
-			else if(resJson['Stored'])
-				explorerViewEnd = (explorerGenesisTimestamp + (resJson.Stored.header.content.slot.period + resJson.Stored.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
-			document.getElementById('explorer_livescroll').checked = false;
-			explorerViewScrolling= false;
+			explorerSearchBlockXhr= null;
+			// explorerSearchBlockTimeout= setTimeout(explorerSearchBlock, 10000, what, false)
+			
+			if(explorerViewSelCenter) {
+				explorerViewEnd = (explorerGenesisTimestamp + (resJson.content.block.header.content.slot.period + resJson.content.block.header.content.slot.thread/nthreads) * explorerT0) / 1000 + explorerViewTimespan/2;
+				document.getElementById('explorer_livescroll').checked = false;
+				explorerViewScrolling= false;
+			}
+
+			explorerViewSelCenter= false
 		}
-
-		explorerViewSelCenter= false
 	}
 	function onerror(error, xhr) {
 		requestsRemaining -= 1
@@ -268,7 +268,8 @@ explorerSearchBlock= function(what) {
 		}
 			
 	}
-	explorerSearchBlockXhr = RESTRequest("GET", 'block/'+encodeURIComponent(what), null, onresponse, onerror);
+	data = [what]
+	explorerSearchBlockXhr = JsonRPCRequest('get_block', data, onresponse, onerror);
 }
 
 var explorerSearchTransactionXhr= null
@@ -293,14 +294,14 @@ explorerSearchTransaction= function(what) {
 		resJson['what'] = what
 
 		if(resJson[0]) {
-		explorerSetTransactionSearchTable(resJson);
-		var statusdiv= document.getElementById('explorerSearchStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+			explorerSetTransactionSearchTable(resJson);
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
-		explorerSearchTransactionXhr= null;
-		// explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 10000, what, false)
+			explorerSearchTransactionXhr= null;
+			// explorerSearchTransactionTimeout= setTimeout(explorerSearchTransaction, 10000, what, false)
 
-		explorerViewSelCenter= false
+			explorerViewSelCenter= false
 		}
 	}
 	function onerror(error, xhr) {
@@ -314,7 +315,8 @@ explorerSearchTransaction= function(what) {
 		else
 			explorerSearchAddress(what)
 	}
-	explorerSearchTransactionXhr = RESTRequest("GET", 'get_operations?operation_ids[0]='+encodeURIComponent(what), null, onresponse, onerror);
+	data = [[what]]
+	explorerSearchTransactionXhr = JsonRPCRequest('get_operations', data, onresponse, onerror);
 }
 
 var explorerSearchAddressXhr= null
@@ -335,13 +337,19 @@ explorerSearchAddress= function(what) {
 
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
-		if (resJson[resJson.what].final_ledger_data.balance != 0 || resJson[resJson.what].candidate_ledger_data.balance !=0 || resJson[resJson.what].locked_balance != 0 || resJson[resJson.what].final_rolls !=0 || resJson[resJson.what].active_rolls || resJson[resJson.what].candidate_rolls != 0) {
-			explorerSearchCreatedBlocks(resJson)
+		if (resJson[0].balance.final_balance != 0 || resJson[0].balance.candidate_balance !=0 || resJson[0].balance.locked_balance != 0 || resJson[0].rolls.final_rolls !=0 || resJson[0].rolls.active_rolls || resJson[0].rolls.candidate_rolls != 0) {
 
 			explorerSearchAddressXhr= null;
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
 
 			explorerViewSelCenter= false
+			requestsRemaining -= 1
+			requestsSuccess += 1
+			// explorerSetAddressOperations(tab, resJson)
+			explorerSetAddressSearchTable(resJson)
+			
+			var statusdiv= document.getElementById('explorerSearchStatus');
+			if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 		}
 		else
 			requestsRemaining -= 1
@@ -355,86 +363,8 @@ explorerSearchAddress= function(what) {
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
 		}
 	}
-	explorerSearchAddressXhr = RESTRequest("GET", 'addresses_info?addrs[0]='+encodeURIComponent(what), null, onresponse, onerror);
-}
-
-var explorerSearchCreatedBlocksXhr= null
-// var explorerSearchAddressTimeout= null
-explorerSearchCreatedBlocks= function(jsondata) {
-	// if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
-	if(explorerSearchCreatedBlocksXhr != null) { var tmp=explorerSearchCreatedBlocksXhr; explorerSearchCreatedBlocksXhr=null; tmp.abort(); }
-	
-	// var div= document.getElementById('explorerSearchResult');
-	// var statusdiv= document.getElementById('explorerSearchStatus');
-	
-	// if(first) {
-	// 	if(div) div.innerHTML= '';
-	// 	explorersearch= document.getElementById('explorersearch');
-	// 	if(explorersearch) { explorersearch.value= what; }
-	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
-	// }
-
-	function onresponse(resJson, xhr) {
-		// if (resJson[resJson.what].final_ledger_data.balance != 0 || resJson[resJson.what].candidate_ledger_data.balance !=0 || resJson[resJson.what].locked_balance != 0 || resJson[resJson.what].final_rolls !=0 || resJson[resJson.what].active_rolls || resJson[resJson.what].candidate_rolls != 0) {
-		jsondata['created_blocks'] = resJson
-		addressOperationsSearch(jsondata)
-
-		explorerSearchCreatedBlocksXhr= null;
-		// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
-
-		// }
-		// else
-		// 	requestsRemaining -= 1
-	}
-	function onerror(error, xhr) {
-		requestsRemaining -= 1
-		if(explorerSearchCreatedBlocksXhr != null) { 
-			explorerSearchCreatedBlocksXhr= null;
-			// var statusdiv= document.getElementById('explorerSearchStatus');
-			// if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 1000, what, false)
-		}
-	}
-	explorerSearchCreatedBlocksXhr = RESTRequest("GET", 'block_ids_by_creator/'+encodeURIComponent(jsondata['what']), null, onresponse, onerror);
-}
-
-var addressOperationsSearchXhr= null
-// var addressOperationsSearchTimeout= null
-addressOperationsSearch = function(jsondata) {
-	// if(address == '') { explorerSearchClear(); return; }
-	// if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
-	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
-	// var div = document.getElementById('explorerSearchResult');
-	// var statusdiv = document.getElementById('explorerSearchStatus');
-
-	// explorerViewSelId = address
-	
-	// if(first) {
-	// 	if(div) div.innerHTML= '';
-	// 	explorersearch= document.getElementById('explorersearch');
-	// 	if(explorersearch) { explorersearch.value= address; }
-	// 	if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= 'Loading search results...'; }
-	// }
-	function onresponse(resJson, xhr) {
-		requestsRemaining -= 1
-		requestsSuccess += 1
-		// explorerSetAddressOperations(tab, resJson)
-		jsondata['operations'] = resJson
-		explorerSetAddressSearchTable(jsondata)
-		
-		var statusdiv= document.getElementById('explorerSearchStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-	}
-	function onerror(error, xhr) {
-		requestsRemaining -= 1
-		if(addressOperationsSearchXhr != null) { 
-			addressOperationsSearchXhr= null;
-			var statusdiv= document.getElementById('explorerSearchStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading search data. Retrying...'; }
-			// addressOperationsSearchTimeout= setTimeout(addressOperationsSearch, 1000, jsondata, false)
-		}
-	}
-	addressOperationsSearchXhr = RESTRequest("GET", 'operations_involving_address/'+encodeURIComponent(jsondata['what']), null, onresponse, onerror);
+	data = [[what]]
+	explorerSearchAddressXhr = JsonRPCRequest('get_addresses', data, onresponse, onerror);
 }
 
 explorerSearchClear= function() {
@@ -449,7 +379,7 @@ explorerSearchClear= function() {
 	// if(explorerSearchAddressTimeout != null) { clearTimeout(explorerSearchAddressTimeout); explorerSearchAddressTimeout=null; }
 	if(explorerSearchAddressXhr != null) { var tmp=explorerSearchAddressXhr; explorerSearchAddressXhr=null; tmp.abort(); }
 	// if(addressOperationsSearchTimeout != null) { clearTimeout(addressOperationsSearchTimeout); addressOperationsSearchTimeout=null; }
-	if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
+	// if(addressOperationsSearchXhr != null) { var tmp=addressOperationsSearchXhr; addressOperationsSearchXhr=null; tmp.abort(); }
 	var div= document.getElementById('explorerSearchResult');
 	if(div) div.innerHTML= '';
 	var statusdiv= document.getElementById('explorerSearchStatus');
@@ -501,66 +431,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 	}
 
 	addheader('Block ' + String(jsondata['what']));
-	if (jsondata['Active']) {
-		addrow('Status', 'Active')
-		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Active.header.content['creator']))))
-		addrow('Thread', jsondata.Active.header.content.slot['thread'])
-		addrow('Period', jsondata.Active.header.content.slot['period'])
-		addrow('Signature', jsondata.Active.header['signature'])
-		
-		var operations = jsondata.Active.operations;
-		addrow('Op. Count', operations.length)
-		for(var i= 0 ; i < operations.length ; i++) {
-			parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
-			parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
-			var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
-			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
-			var tdc= addrow('Transaction', null)
-			tdc.appendChild(createSearchLink(String(tx_id)));
-		}
-
-		var endorsements = jsondata.Active.header.content.endorsements
-		for(var i= 0 ; i < endorsements.length ; i++) {
-			var tdc = addrow('Endorsement ' + endorsements[i].content.index, String(endorsements[i].content.sender_public_key))
-		}
-		
-		parentIds = jsondata.Active.header.content['parents'];
-		for(var i= 0 ; i < parentIds.length ; i++) {
-			var tdc= addrow('Parent (thread ' + i + ')', null)
-			tdc.appendChild(createSearchLink(String(parentIds[i])));
-		}
-	}
-	else if (jsondata['Final']) {
-		addrow('Status', 'Final')
-		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.Final.header.content['creator']))))
-		addrow('Thread', jsondata.Final.header.content.slot['thread'])
-		addrow('Period', jsondata.Final.header.content.slot['period'])
-		addrow('Signature', jsondata.Final.header['signature'])
-
-		var operations = jsondata.Final.operations;
-		addrow('Op. Count', operations.length)
-		for(var i= 0 ; i < operations.length ; i++) {
-			parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
-			parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
-			var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
-			// var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
-			var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.Buffer.from(operations[i].signature, "hex")])))
-			var tdc= addrow('Transaction', null)
-			tdc.appendChild(createSearchLink(String(tx_id)));
-		}
-		
-		parentIds = jsondata.Final.header.content['parents'];
-		for(var i= 0 ; i < parentIds.length ; i++) {
-			var tdc= addrow('Parent (thread ' + i + ')', null)
-			tdc.appendChild(createSearchLink(String(parentIds[i])));
-		}
-	}
-	else if (jsondata['Discarded']) {
-		addrow('Status', 'Discarded (' + jsondata.Discarded + ')')
-	}
-	else {
+	if (jsondata.content == null) {
 		var tr = document.createElement('TR');
 		tab.appendChild(tr);
 		var td_field= document.createElement('TD');
@@ -568,7 +439,61 @@ explorerSetBlockSearchTable= function(jsondata) {
 		tr.appendChild(td_field);
 		td_field.appendChild(document.createTextNode('Block not found'));
 	}
+	else {
+		jsondata = jsondata.content
+		if (jsondata.is_final) {
+			addrow('Status', 'Final')
+		}
+		else if (jsondata.is_stale) {
+			addrow('Status', 'Stale')
+		}
+		else if (!jsondata.is_final) {
+			addrow('Status', 'Active')
+		}
+		var tdc = addrow('Creator', null)
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.block.header.content['creator']))))
+		addrow('Thread', jsondata.block.header.content.slot['thread'])
+		addrow('Period', jsondata.block.header.content.slot['period'])
+		addrow('Signature', jsondata.block.header['signature'])
+
+		var operations = jsondata.block.operations;
+		addrow('Op. Count', operations.length)
+		for(var i= 0 ; i < operations.length ; i++) {
+			var operation_type = Object.keys(operations[i].content.op)[0]
+			if (operation_type == 'RollSell' || operation_type == 'RollBuy') {
+				if (operation_type == 'RollBuy') {
+					type_id = 1
+				}
+				else {
+					type_id = 2
+				}
+				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
+				var encoded_fee = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(parsed_fee))
+				var encoded_expire_period = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(operations[i].content.expire_period))
+				var sender_pubkey = xbqcrypto.base58check_decode(operations[i].content.sender_public_key)
+				var encoded_type_id = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(type_id))
+				var encoded_roll_count = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(operations[i].content.op[operation_type].roll_count))
+				var op_bytes_compact = xbqcrypto.Buffer.concat([encoded_fee, encoded_expire_period, sender_pubkey, encoded_type_id, encoded_roll_count])
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tdc= addrow(operation_type, null)
+				tdc.appendChild(createSearchLink(String(tx_id)));
+			}
+			else if (Object.keys(operations[i].content.op)[0] == 'Transaction') {
+				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
+				parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
+				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tdc = addrow('Transaction', null)
+				tdc.appendChild(createSearchLink(String(tx_id)));
+			}
+		}
 		
+		parentIds = jsondata.block.header.content['parents'];
+		for(var i= 0 ; i < parentIds.length ; i++) {
+			var tdc= addrow('Parent (thread ' + i + ')', null)
+			tdc.appendChild(createSearchLink(String(parentIds[i])));
+		}
+	}
 }
 
 explorerTransactionSearchResult= null
@@ -615,36 +540,37 @@ explorerSetTransactionSearchTable= function(jsondata) {
 	}
 	
 	addheader('Operation ' + String(jsondata['what']))
-	var operation_type = Object.keys(jsondata[0][1]['op']["content"]["op"])[0]
+	var operation_type = Object.keys(jsondata[0].operation.content.op)[0]
 	var tdc= addrow('Operation type', operation_type)
-	if(operation_type=="RollBuy") {
-		var roll_count = jsondata[0][1]['op']["content"]["op"].RollBuy.roll_count
+	if(operation_type == "RollBuy") {
+		var roll_count = jsondata[0].operation.content.op.RollBuy.roll_count
 		var tdc= addrow('Roll Count', roll_count);
 	}
-	var transactionInBlocks = jsondata[0][1]['in_blocks'];
-	Object.entries(transactionInBlocks).forEach(([key, value]) => {
+	var transactionInBlocks = jsondata[0].in_blocks;
+	for (var i = 0 ; i <transactionInBlocks.length; i++) {
 		var tdc= addrow('In block', null);
-		tdc.appendChild(createSearchLink(String(key)));
-		if(value[1]) {
-			addrow('Finality state', 'Final');
-		}
-		else
-			addrow('Finality state', 'Pending');
-	});
-	var addr = String(jsondata[0][1]['op']['content']['sender_public_key']);
+		tdc.appendChild(createSearchLink(transactionInBlocks[i]));
+	}
+	if(jsondata[0].is_final) {
+		addrow('Finality state', 'Final');
+	}
+	else {
+		addrow('Finality state', 'Pending');
+	}
+	var addr = String(jsondata[0].operation.content.sender_public_key);
 	addr = xbqcrypto.parse_public_base58check(addr).pubkey
 	addr = xbqcrypto.deduce_address(addr)
 	var tdc= addrow('From', null);
 	tdc.appendChild(createSearchLink(addr));
 	if(operation_type=="Transaction") {
 		var tdc= addrow('To', null);
-		tdc.appendChild(createSearchLink(String(jsondata[0][1]['op']['content']['op']['Transaction']['recipient_address'])));
-		var value = new Decimal(jsondata[0][1]['op']['content']['op']['Transaction']['amount'])
+		tdc.appendChild(createSearchLink(String(jsondata[0].operation.content.op.Transaction.recipient_address)));
+		var value = new Decimal(jsondata[0].operation.content.op.Transaction.amount)
 		addrow('Value', value);
-		var fee = new Decimal(jsondata[0][1]['op']['content']['fee'])
+		var fee = new Decimal(jsondata[0].operation.content.fee)
 		addrow('Fee', fee);
 	}
-	addrow('In pool', jsondata[0][1]['in_pool']);
+	addrow('In pool', jsondata[0].in_pool);
 	addrow('Thread', xbqcrypto.get_address_thread(addr));
 }
 
@@ -694,30 +620,32 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	addheader('Address ' + String(jsondata['what']));
 	
-	var balance = new Decimal(jsondata[jsondata.what].final_ledger_data.balance)
-	addrow('Final balance', balance);
-	var candidate_balance = new Decimal(jsondata[jsondata.what].candidate_ledger_data.balance)
+	var final_balance = new Decimal(jsondata[0].balance.final_balance)
+	addrow('Final balance', final_balance);
+	var candidate_balance = new Decimal(jsondata[0].balance.candidate_balance)
 	addrow('Candidate balance', candidate_balance);
-	var locked_balance = new Decimal(jsondata[jsondata.what].locked_balance)
+	var locked_balance = new Decimal(jsondata[0].balance.locked_balance)
 	addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
 
-	var final_rolls = jsondata[jsondata.what].final_rolls
+	var final_rolls = jsondata[0].rolls.final_rolls
 	addrow('Final rolls', final_rolls);
-	var active_rolls = jsondata[jsondata.what].active_rolls
+	var active_rolls = jsondata[0].rolls.active_rolls
 	addrow('Active rolls', active_rolls);
-	var candidate_rolls = jsondata[jsondata.what].candidate_rolls
+	var candidate_rolls = jsondata[0].rolls.candidate_rolls
 	addrow('Candidate rolls', candidate_rolls);
 
-	for (const [key, value] of Object.entries(jsondata['operations'])) {
+	// TODO
+	for (var i = 0 ; i <jsondata[0].involved_in_operations.length; i++) {
 		var tdc = addrow('Transaction', null);
-		tdc.appendChild(createSearchLink(String(key)));
+		tdc.appendChild(createSearchLink(String(jsondata[0].involved_in_operations[i])));
 	}
 
-	for (const [key, value] of Object.entries(jsondata['created_blocks'])) {
-		var tdc = addrow('Block (' + String(value) + ')', null);
-		tdc.appendChild(createSearchLink(String(key)));
+	for(var i = 0 ; i < jsondata[0].blocks_created.length ; i++) {
+	// for (const [key, value] of Object.entries(jsondata[0].blocks_created)) {
+		var tdc = addrow('Block', null);
+		tdc.appendChild(createSearchLink(String(jsondata[0].blocks_created[i])));
 	}
 }
 
@@ -752,6 +680,7 @@ explorerSetAddressOperations = function(tab, jsondata) {
 	}
 }
 
+latest_period = null
 var explorerUpdateInfoXhr= null
 var explorerUpdateInfoTimeout= null
 explorerUpdateInfo= function(first=true) {
@@ -764,6 +693,7 @@ explorerUpdateInfo= function(first=true) {
 		// explorerStakingUpdateInfos(resJson)
 		var statusdiv= document.getElementById('explorerInfoStatus');
 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
+		latest_period = resJson.last_period
 		explorerSetInfo(resJson);
 		explorerUpdateInfoXhr= null;
 		explorerUpdateInfoTimeout= setTimeout(explorerUpdateInfo, 10000, false)
@@ -779,61 +709,9 @@ explorerUpdateInfo= function(first=true) {
 	explorerUpdateInfoXhr= RESTRequest("GET", 'info', null, onresponse, onerror);
 }
 
-var explorerStakingUpdateInfosXhr = null
-explorerStakingUpdateInfos = function(jsondata) {
-	function onresponse(resJson, xhr) {
-		jsondata['stakers'] = resJson
-        // explorerNodesUpdateInfos(jsondata);
-		explorerSetInfo(jsondata);
-		var statusdiv= document.getElementById('explorerInfoStatus');
-		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-	}
-	function onerror(error, xhr) {
-		if(explorerStakingUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-			explorerStakingUpdateInfosXhr = null;
-			var statusdiv= document.getElementById('explorerInfoStatus');
-			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-		}
-	}
-	stakingUpdateInfosXhr= RESTRequest("GET", 'stakers_info', null, onresponse, onerror);
-}
-
-// var explorerNodesUpdateInfosXhr = null
-// explorerNodesUpdateInfos = function(jsondata) {
-// 	function onresponse(resJson, xhr) {
-// 		jsondata['nodes'] = resJson
-//         explorerSetInfo(jsondata);
-// 		var statusdiv= document.getElementById('explorerInfoStatus');
-// 		if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
-// 	}
-// 	function onerror(error, xhr) {
-// 		if(explorerNodesUpdateInfosXhr != null) { // yeah, otherwise we actually wanted it to die
-// 			explorerNodesUpdateInfosXhr = null;
-// 			var statusdiv= document.getElementById('explorerInfoStatus');
-// 			if(statusdiv) { statusdiv.style.color='red'; statusdiv.innerHTML= 'Error loading infos. Retrying...'; }
-// 		}
-// 	}
-// 	stakingUpdateInfosXhr= RESTRequest("GET", 'peers', null, onresponse, onerror);
-// }
-
 explorerSetInfo= function(data) {
 	var div= document.getElementById('explorerInfo');
 	if(!div) return;
-
-	// // Create items array
-    // var items = Object.keys(jsondata['stakers']).map(function(key) {
-	// return [key, jsondata['stakers'][key]];
-	// });
-	// // Sort the array based on the second element
-	// items.sort(function(first, second) {
-	// return second[1] - first[1];
-	// });
-	// var totstakers = 0
-	// var totrolls = 0
-	// items.forEach(function (item, index) {
-	// 	totstakers += 1
-	// 	totrolls += item[1]
-	// });
 
 	var date = new Date(explorerGenesisTimestamp);
 	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -846,15 +724,15 @@ explorerSetInfo= function(data) {
 	var formattedTime = day + ' ' + month + ' ' + year + ', ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
 	div.innerHTML = '<span>\
+	Testnet version: <b>' + data.version + '</b><br>\
 	Last Reboot: <b>' + formattedTime + '</b><br>\
-	Cycle: <b>' + current_cycle + '</b>, Period: <b>' + latest_period + '</b><br>\
+	Cycle: <b>' + data.current_cycle + '</b>, Period: <b>' + data.last_period + '</b><br>\
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON)) + ' tx/s' + '</b><br>\
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
 	Number of Cliques: <b>' + data.clique_count + '</b><br>\
 	Number of Stakers: <b>' + data.n_stakers + '</b><br>\
-	Number of Rolls: <b>' + data.n_rolls + '</b><br>\
 	</span>';
-	
+
 	finished_loading('wallet_info');
 }
 
@@ -896,13 +774,20 @@ explorerGetViewInterval= function() {
 			explorerViewIntervalBlocks= []
 
 			for(var i = 0 ; i < resJson.length ; i++) {
+				if (resJson[i].is_final) {
+					block_status = 'Final'
+				}
+				else if (resJson[i].is_stale) {
+					block_status = 'Stale'
+				}
+				else {block_status = 'Active'}
 				explorerViewIntervalBlocks.push( {
-					thread: parseInt(resJson[i][1].thread),
-					period: parseInt(resJson[i][1].period),
-					blockId: String(resJson[i][0]),
-					timestamp: (explorerGenesisTimestamp + (resJson[i][1].period + resJson[i][1].thread/nthreads) * explorerT0) / 1000,
-					status: resJson[i][2],
-					parents: resJson[i][3]});
+					thread: parseInt(resJson[i].slot.thread),
+					period: parseInt(resJson[i].slot.period),
+					blockId: String(resJson[i].id),
+					timestamp: (explorerGenesisTimestamp + (resJson[i].slot.period + resJson[i].slot.thread/nthreads) * explorerT0) / 1000,
+					status: block_status,
+					parents: resJson[i].parents});
 			}
 
 			if(explorerViewScrolling && explorerViewIntervalBlocks.length > 0) {
@@ -950,29 +835,30 @@ explorerGetViewInterval= function() {
 		}
 	}
 
-	if(explorerViewScrolling) {
-		// viewStart= - explorerViewTimespan - explorerViewTimePad
-		// viewEnd= -1
-		// TODO
+	if(explorerViewEnd != null) {
+		viewStart = Math.floor((explorerViewEnd - explorerViewTimespan - explorerViewTimePad) * 1000)
+		viewEnd = Math.ceil((explorerViewEnd + explorerViewTimePad) * 1000)
+		if(viewStart < 0) viewStart = 0
+	}
+	else {
 		viewEnd = Date.now()
 		viewStart = viewEnd - (explorerViewTimespan + explorerViewTimePad) * 1000
 	}
-	else if(explorerViewEnd != null) {
-		viewStart = Math.floor((explorerViewEnd - explorerViewTimespan - explorerViewTimePad) * 1000)
-		viewEnd = Math.ceil((explorerViewEnd + explorerViewTimePad) * 1000)
-		if(viewStart < 0) viewStart= 0
-		if(viewEnd < 0) viewEnd= 0
-	}
-	else
-		viewStart = Math.floor((-explorerViewTimespan - explorerViewTimePad) * 1000), viewEnd= Date.now()
     
     if(explorerViewScrolling) {
         explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
     } else {
-	    // Rounding for cache
-	    viewStart = Math.floor(viewStart/500) * 500
-	    viewEnd = Math.floor(viewEnd/500) * 500
-	    explorerGetViewIntervalXhr = RESTRequest("GET", 'graph_interval?start='+encodeURIComponent(viewStart)+'&end='+encodeURIComponent(viewEnd), null, onresponse, onerror);
+		if(viewEnd > Date.now()) {
+			explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
+		}
+		else {
+			// Rounding for cache
+			viewStart = Math.floor(viewStart/500) * 500
+			viewEnd = Math.floor(viewEnd/500) * 500
+			data = {"start": viewStart,
+					"end": viewEnd}
+			explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
+		}
     }
 }
 
@@ -1062,9 +948,6 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		var drawLinesFromThread= null, drawLinesFromTimestamp= null, drawLinesToTimestamps= null;
 
 		if(explorerViewIntervalBlocks.length > 0) {
-			// if(explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1].hasOwnProperty('timestampParents')) {
-			// 	var blc= explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1];
-			// TODO
 			drawLinesToTimestamps = lastblc.timestampParents
 			drawLinesFromThread = lastblc.thread
 			drawLinesFromTimestamp = lastblc.timestamp
@@ -1098,24 +981,21 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	
 		//Is the info present in the search results ?
 		if(explorerBlockSearchResult != null) {
-			if((explorerBlockSearchResult['Active'] || explorerBlockSearchResult['Final']) && explorerGetViewIntervalResult != null) {
-				if(explorerBlockSearchResult['Active'])
-					var status = 'Active'
-				else
-					var status = 'Final'
+			if((!explorerBlockSearchResult.content.is_stale || explorerBlockSearchResult.content.is_final) && explorerGetViewIntervalResult != null) {
 				if(String(explorerBlockSearchResult['what']) == explorerViewSelId) {
 					drawLinesToTimestamps = []
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-								if (explorerBlockSearchResult[status].header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
+								if (explorerBlockSearchResult.content.block.header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
 									parentTimestamp = explorerViewIntervalBlocks[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
 					}
-					drawLinesFromThread = parseInt(explorerBlockSearchResult[status].header.content.slot['thread'])
-					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerBlockSearchResult[status].header.content.slot['period'] + explorerBlockSearchResult[status].header.content.slot['thread']/nthreads) * explorerT0) / 1000
+					// drawLinesFromThread = parseInt(explorerBlockSearchResult.content.block.header.content.slot.thread)
+					drawLinesFromThread = explorerBlockSearchResult.content.block.header.content.slot.thread
+					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerBlockSearchResult.content.block.header.content.slot.period + explorerBlockSearchResult.content.block.header.content.slot.thread/nthreads) * explorerT0) / 1000
 				}
 			}
 		}
@@ -1142,13 +1022,13 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	var drawblock= function(blocki, selected= false) {
 		ts= explorerViewIntervalBlocks[blocki].timestamp;
 		thrd= explorerViewIntervalBlocks[blocki].thread;
-		status= explorerViewIntervalBlocks[blocki].status;
+		block_status= explorerViewIntervalBlocks[blocki].status;
 
-		if(status == 'Final')
+		if(block_status == 'Final')
 			ctx.fillStyle = "#50CC20";
-		else if(status == 'Stale')
+		else if(block_status == 'Stale')
 			ctx.fillStyle = "#e82c2c";
-		else if(status == 'Active')
+		else if(block_status == 'Active')
 			ctx.fillStyle = "#0087e5";
 		else
 			ctx.fillStyle = "#FF8C00";

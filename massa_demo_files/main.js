@@ -31,10 +31,50 @@ initPages= function() {
 	// stakingInit();
 }
 
+JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
+	var data = JSON.stringify({
+		"jsonrpc": "2.0",
+		"method": resource,
+		"params": data,
+		"id": 0
+	  });
+
+	  var xhr = new XMLHttpRequest();
+	  xhr.withCredentials = true;
+
+	  console.log(resource)
+	  
+	  xhr.addEventListener("readystatechange", function() {
+		if(this.readyState === 4) {
+			if(this.status === 200) {
+				try {
+					var response= JSON.parse(this.responseText);
+				} catch(e) {
+					error_callback('JSON.parse error: ' + String(e), this) ;
+				}
+				if ("error" in response) {
+					error_callback(response.error, this) ;
+				}
+				else {
+					completion_callback(response.result, this);
+				}
+			}
+			else {
+				error_callback('XMLHttpRequest error: ' + String(this.statusText), this);  
+			}
+		}
+	  });
+	  
+	  xhr.open("POST", "https://test.massa.net/api/v2");
+	  xhr.setRequestHeader("Content-Type", "application/json");
+	  
+	  xhr.send(data);
+	  return xhr
+}
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
-	var url= "https://test.massa.net/api/v1/"+resource;
+	var url= "https://test.massa.net/api/v2/"+resource;
 	console.log(url)
 
 	xhr.open(method, url, true);
