@@ -780,8 +780,18 @@ explorerGetViewInterval= function() {
 		explorerGetViewIntervalTimeout= setTimeout(explorerGetViewInterval, timeoutVal)
 
 		if (explorerGetViewIntervalResult.length > 0) {
+			var blocks_per_slot = {};
 			for(var i = 0 ; i < explorerGetViewIntervalResult.length ; i++) {
-				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[i].slot.period + explorerGetViewIntervalResult[i].slot.thread/nthreads) * explorerT0) / 1000
+				block_thread = explorerGetViewIntervalResult[i].slot.thread
+				block_period = explorerGetViewIntervalResult[i].slot.period
+				if (blocks_per_slot.hasOwnProperty(block_thread*nthreads + block_period)) {
+					blocks_per_slot[block_thread*nthreads + block_period] += 1
+				}
+				else {
+					blocks_per_slot[block_thread*nthreads + block_period] = 0
+				}
+				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (block_period + block_thread/nthreads) * explorerT0) / 1000 - blocks_per_slot[block_thread*nthreads + block_period]*blocksymbolsize*explorerViewTimespan/canvw*1.2
+				// explorerGetViewIntervalResult[i].shift = blocks_per_slot[block_thread*nthreads + block_period]
 			}
 
 			if(explorerViewScrolling && explorerGetViewIntervalResult.length > 0) {
@@ -867,6 +877,8 @@ explorerAutoLine = function(ctx, fromx, fromy, tox, toy, ctlshift) {
     }
 }
 
+var blocksymbolsize = null
+var canvw = null
 explorerViewUpdate= function(timestamp=null, relaunch=true) {
 
 	if (timestamp != null)
@@ -877,7 +889,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		window.requestAnimationFrame(explorerViewUpdate)
 		return;
 	}
-	var canvw= canv.scrollWidth;
+	canvw= canv.scrollWidth;
 	var minch= 200, maxch= 500, tryprop= 0.3;
 	var canvh= Math.round(tryprop*canvw)
 	if(canvh > maxch)
@@ -903,7 +915,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	ctx.strokeStyle = '#DEDEFF';
 	ctx.stroke()
 	
-	var blocksymbolsize= Math.max(1,Math.min(lineyinterval-2, 30))
+	blocksymbolsize = Math.max(1,Math.min(lineyinterval-2, 30))
 	
 	//Dunno where we are. Don't draw anything
 	if( (explorerViewScrolling && explorerViewKeypointEnd == null) || (explorerViewEnd == null) ) {
@@ -938,7 +950,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 
 		if(explorerGetViewIntervalResult.length > 0) {
 			drawLinesToTimestamps = lastblc.timestampParents
-			drawLinesFromThread = lastblc.thread
+			drawLinesFromThread = lastblc.slot.thread
 			drawLinesFromTimestamp = lastblc.timestamp
 		}
 		
@@ -976,18 +988,13 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
 								if (explorerBlockSearchResult.content.block.header.content.parents[i] == explorerGetViewIntervalResult[j].id) {
-									if(explorerGetViewIntervalResult[j].is_final || explorerGetViewIntervalResult[j].is_in_blockclique) {
-										parentTimestamp = explorerGetViewIntervalResult[j].timestamp
-									}
-									else {
-										parentTimestamp = explorerGetViewIntervalResult[j].timestamp - blocksymbolsize*explorerViewTimespan/canvw
-									}
+									parentTimestamp = explorerGetViewIntervalResult[j].timestamp
+									// if (explorerGetViewIntervalResult[j].shift > 1) console.log(3)
 									parentTimestamp = explorerGetViewIntervalResult[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
 					}
-					// drawLinesFromThread = parseInt(explorerBlockSearchResult.content.block.header.content.slot.thread)
 					drawLinesFromThread = explorerBlockSearchResult.content.block.header.content.slot.thread
 					drawLinesFromTimestamp = (explorerGenesisTimestamp + (explorerBlockSearchResult.content.block.header.content.slot.period + explorerBlockSearchResult.content.block.header.content.slot.thread/nthreads) * explorerT0) / 1000
 				}
@@ -1030,12 +1037,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		var effSymSize= blocksymbolsize
 		if(selected)
 			effSymSize = blocksymbolsize*2.0
-		if(explorerGetViewIntervalResult[blocki].is_final || explorerGetViewIntervalResult[blocki].is_in_blockclique) {
-			xpos = canvw*(ts-viewStart)/explorerViewTimespan
-		}
-		else {
-			xpos = canvw*(ts-viewStart)/explorerViewTimespan - blocksymbolsize
-		}
+		xpos = canvw*(ts-viewStart)/explorerViewTimespan
 		ypos = threadys[thrd]
 		resx= xpos-effSymSize/2
 		resy= ypos-effSymSize/2
