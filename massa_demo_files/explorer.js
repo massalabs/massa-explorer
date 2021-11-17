@@ -781,19 +781,14 @@ explorerGetViewInterval= function() {
 			explorerViewIntervalBlocks= []
 
 			for(var i = 0 ; i < resJson.length ; i++) {
-				if (resJson[i].is_final) {
-					block_status = 'Final'
-				}
-				else if (resJson[i].is_stale) {
-					block_status = 'Stale'
-				}
-				else {block_status = 'Active'}
 				explorerViewIntervalBlocks.push( {
 					thread: parseInt(resJson[i].slot.thread),
 					period: parseInt(resJson[i].slot.period),
 					blockId: String(resJson[i].id),
 					timestamp: (explorerGenesisTimestamp + (resJson[i].slot.period + resJson[i].slot.thread/nthreads) * explorerT0) / 1000,
-					status: block_status,
+					is_final: resJson[i].is_final,
+					is_in_blockclique: resJson[i].is_in_blockclique,
+					is_stale: resJson[i].is_stale,
 					parents: resJson[i].parents});
 			}
 
@@ -995,6 +990,12 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
 								if (explorerBlockSearchResult.content.block.header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
+									if(explorerViewIntervalBlocks[j].is_final || explorerViewIntervalBlocks[j].is_in_blockclique) {
+										parentTimestamp = explorerViewIntervalBlocks[j].timestamp
+									}
+									else {
+										parentTimestamp = explorerViewIntervalBlocks[j].timestamp - blocksymbolsize*explorerViewTimespan/canvw
+									}
 									parentTimestamp = explorerViewIntervalBlocks[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
@@ -1026,25 +1027,30 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 
 	//draw blocks
 	var selblocki= null
-	var drawblock= function(blocki, selected= false) {
+	var drawblock= function(blocki, selected=false) {
 		ts= explorerViewIntervalBlocks[blocki].timestamp;
 		thrd= explorerViewIntervalBlocks[blocki].thread;
 		block_status= explorerViewIntervalBlocks[blocki].status;
 
-		if(block_status == 'Final')
+		if(explorerViewIntervalBlocks[blocki].is_final)
 			ctx.fillStyle = "#50CC20";
-		else if(block_status == 'Stale')
+		else if(explorerViewIntervalBlocks[blocki].is_stale)
 			ctx.fillStyle = "#e82c2c";
-		else if(block_status == 'Active')
-			ctx.fillStyle = "#0087e5";
-		else
+		else if(!explorerViewIntervalBlocks[blocki].is_in_blockclique)
 			ctx.fillStyle = "#FF8C00";
+		else
+			ctx.fillStyle = "#0087e5";
 		
 		var effSymSize= blocksymbolsize
 		if(selected)
 			effSymSize = blocksymbolsize*2.0
-		xpos= canvw*(ts-viewStart)/explorerViewTimespan;
-		ypos= threadys[thrd]
+		if(explorerViewIntervalBlocks[blocki].is_final || explorerViewIntervalBlocks[blocki].is_in_blockclique) {
+			xpos = canvw*(ts-viewStart)/explorerViewTimespan
+		}
+		else {
+			xpos = canvw*(ts-viewStart)/explorerViewTimespan - blocksymbolsize
+		}
+		ypos = threadys[thrd]
 		resx= xpos-effSymSize/2
 		resy= ypos-effSymSize/2
 		resw= effSymSize
