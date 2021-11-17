@@ -120,7 +120,7 @@ explorerInit= function() {
 			explorerViewCancelClick= false
 			return
 		}
-		if(explorerViewEnd == null || explorerViewIntervalBlocks == null)
+		if(explorerViewEnd == null || explorerGetViewIntervalResult == null)
 			return
 		explorerViewUpdate(null, false)
 		var clickX= (evt.offsetX/canv.width);
@@ -130,11 +130,11 @@ explorerInit= function() {
 		var ytolerance= (xytolerance * Math.min(canv.width,canv.height))/canv.height
 		var mindist= -1
 		var mini= null
-		for(var i= 0 ; i < explorerViewIntervalBlocks.length ; i++) {
-			var blockx= explorerViewIntervalBlocks[i].drawX
-			var blocky= explorerViewIntervalBlocks[i].drawY
-			var blockw= explorerViewIntervalBlocks[i].drawW
-			var blockh= explorerViewIntervalBlocks[i].drawH
+		for(var i= 0 ; i < explorerGetViewIntervalResult.length ; i++) {
+			var blockx= explorerGetViewIntervalResult[i].drawX
+			var blocky= explorerGetViewIntervalResult[i].drawY
+			var blockw= explorerGetViewIntervalResult[i].drawW
+			var blockh= explorerGetViewIntervalResult[i].drawH
 			
 			if(clickX<blockx-xtolerance-blockw/2||clickX>blockx+xtolerance+blockw/2||clickY<blocky-ytolerance-blockh/2||clickY>blocky+ytolerance+blockh/2)
 				continue
@@ -145,7 +145,7 @@ explorerInit= function() {
 			}
 		}
 		if(mini != null)
-			openhash('#explorer?explore=' + encodeURIComponent(explorerViewIntervalBlocks[mini].blockId) + '&nocenter');
+			openhash('#explorer?explore=' + encodeURIComponent(explorerGetViewIntervalResult[mini].id) + '&nocenter');
 		else
 			openhash('#explorer');
 	}
@@ -235,7 +235,6 @@ explorerSearchBlock= function(what) {
 	// }
 
 	function onresponse(resJson, xhr) {
-		resJson = resJson
 		requestsRemaining -= 1
 		requestsSuccess += 1
 		explorerViewSelId= what
@@ -767,53 +766,46 @@ explorerGetViewInterval= function() {
 	if(explorerGetViewIntervalXhr != null) { var tmp=explorerGetViewIntervalXhr; explorerGetViewIntervalXhr=null; tmp.abort(); }
 	
 	function onresponse(resJson, xhr) {
-		explorerGetViewIntervalResult = resJson
+		if (resJson.hasOwnProperty('timeEnd')) {
+			explorerGetViewIntervalResult = resJson.blocks
+		}
+		else {
+			explorerGetViewIntervalResult = resJson
+		}
 		explorerUpdateInfoXhr= null;
 		if(explorerGetViewIntervalTimeout != null) { clearTimeout(explorerGetViewIntervalTimeout); explorerGetViewIntervalTimeout=null; }
 		var timeoutVal= 1000; // update less often if we are looking in the distant past
 		if(explorerViewDragging)
 			timeoutVal= 1000; 
 		explorerGetViewIntervalTimeout= setTimeout(explorerGetViewInterval, timeoutVal)
-		
-		// if(resJson != null && resJson.hasOwnProperty('timeStart') && resJson.hasOwnProperty('timeEnd') && resJson.hasOwnProperty('blockIds') && resJson.hasOwnProperty('threads') && resJson.hasOwnProperty('timestamps')) {
-		// if( (resJson.blockIds.length == resJson.threads.length) && (resJson.threads.length == resJson.timestamps.length) && (resJson.status.length == resJson.status.length) ) {
-		if (resJson.length > 0) {
-			explorerViewIntervalBlocks= []
 
-			for(var i = 0 ; i < resJson.length ; i++) {
-				explorerViewIntervalBlocks.push( {
-					thread: parseInt(resJson[i].slot.thread),
-					period: parseInt(resJson[i].slot.period),
-					blockId: String(resJson[i].id),
-					timestamp: (explorerGenesisTimestamp + (resJson[i].slot.period + resJson[i].slot.thread/nthreads) * explorerT0) / 1000,
-					is_final: resJson[i].is_final,
-					is_in_blockclique: resJson[i].is_in_blockclique,
-					is_stale: resJson[i].is_stale,
-					parents: resJson[i].parents});
+		if (explorerGetViewIntervalResult.length > 0) {
+			for(var i = 0 ; i < explorerGetViewIntervalResult.length ; i++) {
+				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (explorerGetViewIntervalResult[i].slot.period + explorerGetViewIntervalResult[i].slot.thread/nthreads) * explorerT0) / 1000
 			}
 
-			if(explorerViewScrolling && explorerViewIntervalBlocks.length > 0) {
+			if(explorerViewScrolling && explorerGetViewIntervalResult.length > 0) {
 
-				lastblc = explorerViewIntervalBlocks[explorerViewIntervalBlocks.length-1]
+				lastblc = explorerGetViewIntervalResult[explorerGetViewIntervalResult.length-1]
 	            lastblc.timestampParents = []
 
 	            for (var i=0 ; i < nthreads ; i++) {
             		parentTimestamp = null
-            		for (var j=0 ; j < explorerViewIntervalBlocks.length ; j++) {
-  						if (lastblc.parents[i] == explorerViewIntervalBlocks[j].blockId) {
-							lastblc.timestampParents.push(explorerViewIntervalBlocks[j].timestamp)
+            		for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
+  						if (lastblc.parents[i] == explorerGetViewIntervalResult[j].id) {
+							lastblc.timestampParents.push(explorerGetViewIntervalResult[j].timestamp)
 						}
 					}
 	            }
 				
-				if(explorerViewLastBlockId != lastblc.blockId) {
+				if(explorerViewLastBlockId != lastblc.id) {
 					explorerViewLastBlockTimestamp= lastblc.timestamp
 					explorerViewTimestampAtLastBlock= explorerCurViewTimestamp
-					explorerViewLastBlockId= lastblc.blockId;
+					explorerViewLastBlockId= lastblc.id;
 				}
 			}
 
-			explorerViewLastEnd= resJson.timeEnd;
+			explorerViewLastEnd= resJson.timeEnd / 1000;
 			explorerViewTimestampAtLastEnd= explorerCurViewTimestamp;
 			if(explorerViewScrolling) {
 				if(explorerViewKeypointEnd == null || explorerViewTimestampAtKeypointEnd == null) {
@@ -825,7 +817,7 @@ explorerGetViewInterval= function() {
 				explorerViewEnd= Date.now() / 1000
 		}
 		else {
-		    if(resJson != null)
+		    if(explorerGetViewIntervalResult != null)
 		        console.log('Explorer format error.');
 	    }
 	    finished_loading('explorer_graph');
@@ -850,17 +842,12 @@ explorerGetViewInterval= function() {
     if(explorerViewScrolling) {
         explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
     } else {
-		if(viewEnd > Date.now()) {
-			explorerGetViewIntervalXhr = RESTRequest("GET", 'latest_blocks', null, onresponse, onerror);
-		}
-		else {
 			// Rounding for cache
 			viewStart = Math.floor(viewStart/500) * 500
 			viewEnd = Math.floor(viewEnd/500) * 500
 			data = {"start": viewStart,
 					"end": viewEnd}
 			explorerGetViewIntervalXhr = JsonRPCRequest('get_graph_interval', [data], onresponse, onerror);
-		}
     }
 }
 
@@ -949,11 +936,10 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 
 		var drawLinesFromThread= null, drawLinesFromTimestamp= null, drawLinesToTimestamps= null;
 
-		if(explorerViewIntervalBlocks.length > 0) {
+		if(explorerGetViewIntervalResult.length > 0) {
 			drawLinesToTimestamps = lastblc.timestampParents
 			drawLinesFromThread = lastblc.thread
 			drawLinesFromTimestamp = lastblc.timestamp
-			// }
 		}
 		
 		if(drawLinesFromThread != null && drawLinesFromTimestamp != null && drawLinesToTimestamps != null) {
@@ -989,14 +975,14 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
 						for (var j=0 ; j < explorerGetViewIntervalResult.length ; j++) {
-								if (explorerBlockSearchResult.content.block.header.content.parents[i] == explorerViewIntervalBlocks[j].blockId) {
-									if(explorerViewIntervalBlocks[j].is_final || explorerViewIntervalBlocks[j].is_in_blockclique) {
-										parentTimestamp = explorerViewIntervalBlocks[j].timestamp
+								if (explorerBlockSearchResult.content.block.header.content.parents[i] == explorerGetViewIntervalResult[j].id) {
+									if(explorerGetViewIntervalResult[j].is_final || explorerGetViewIntervalResult[j].is_in_blockclique) {
+										parentTimestamp = explorerGetViewIntervalResult[j].timestamp
 									}
 									else {
-										parentTimestamp = explorerViewIntervalBlocks[j].timestamp - blocksymbolsize*explorerViewTimespan/canvw
+										parentTimestamp = explorerGetViewIntervalResult[j].timestamp - blocksymbolsize*explorerViewTimespan/canvw
 									}
-									parentTimestamp = explorerViewIntervalBlocks[j].timestamp
+									parentTimestamp = explorerGetViewIntervalResult[j].timestamp
 									drawLinesToTimestamps.push([i, parentTimestamp])
 							}
 						}
@@ -1028,15 +1014,15 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	//draw blocks
 	var selblocki= null
 	var drawblock= function(blocki, selected=false) {
-		ts= explorerViewIntervalBlocks[blocki].timestamp;
-		thrd= explorerViewIntervalBlocks[blocki].thread;
-		block_status= explorerViewIntervalBlocks[blocki].status;
+		ts= explorerGetViewIntervalResult[blocki].timestamp;
+		thrd= explorerGetViewIntervalResult[blocki].slot.thread;
+		block_status= explorerGetViewIntervalResult[blocki].status;
 
-		if(explorerViewIntervalBlocks[blocki].is_final)
+		if(explorerGetViewIntervalResult[blocki].is_final)
 			ctx.fillStyle = "#50CC20";
-		else if(explorerViewIntervalBlocks[blocki].is_stale)
+		else if(explorerGetViewIntervalResult[blocki].is_stale)
 			ctx.fillStyle = "#e82c2c";
-		else if(!explorerViewIntervalBlocks[blocki].is_in_blockclique)
+		else if(!explorerGetViewIntervalResult[blocki].is_in_blockclique)
 			ctx.fillStyle = "#FF8C00";
 		else
 			ctx.fillStyle = "#0087e5";
@@ -1044,7 +1030,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 		var effSymSize= blocksymbolsize
 		if(selected)
 			effSymSize = blocksymbolsize*2.0
-		if(explorerViewIntervalBlocks[blocki].is_final || explorerViewIntervalBlocks[blocki].is_in_blockclique) {
+		if(explorerGetViewIntervalResult[blocki].is_final || explorerGetViewIntervalResult[blocki].is_in_blockclique) {
 			xpos = canvw*(ts-viewStart)/explorerViewTimespan
 		}
 		else {
@@ -1063,14 +1049,14 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 			ctx.strokeRect(resx,resy,resw,resh)
 		}
 		
-		explorerViewIntervalBlocks[blocki].drawX= xpos/canv.width
-		explorerViewIntervalBlocks[blocki].drawY= ypos/canv.height
-		explorerViewIntervalBlocks[blocki].drawW= resw/canv.width
-		explorerViewIntervalBlocks[blocki].drawH= resh/canv.height
+		explorerGetViewIntervalResult[blocki].drawX= xpos/canv.width
+		explorerGetViewIntervalResult[blocki].drawY= ypos/canv.height
+		explorerGetViewIntervalResult[blocki].drawW= resw/canv.width
+		explorerGetViewIntervalResult[blocki].drawH= resh/canv.height
 	}
-	for(var blocki= 0 ; blocki < explorerViewIntervalBlocks.length ; blocki++) {
+	for(var blocki= 0 ; blocki < explorerGetViewIntervalResult.length ; blocki++) {
 		if(explorerViewSelId != null) {
-			if(explorerViewIntervalBlocks[blocki].blockId == explorerViewSelId) {
+			if(explorerGetViewIntervalResult[blocki].id == explorerViewSelId) {
 				selblocki= blocki;
 				continue;	
 			}
