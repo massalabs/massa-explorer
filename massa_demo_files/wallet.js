@@ -408,7 +408,7 @@ walletSendTransaction= function(data) {
 			}
 		}
 	}
-    explorerGetViewIntervalXhr = JsonRPCRequest('send_operations', [[data]], onresponse, onerror);
+    walletSendTransactionXhr = JsonRPCRequest('send_operations', [[data]], onresponse, onerror);
 }
 
 var walletUpdateBalancesXhr= null
