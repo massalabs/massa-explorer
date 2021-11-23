@@ -336,7 +336,7 @@ explorerSearchAddress= function(what) {
 
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
-		if (resJson[0].balance.final_balance != 0 || resJson[0].balance.candidate_balance !=0 || resJson[0].balance.locked_balance != 0 || resJson[0].rolls.final_rolls !=0 || resJson[0].rolls.active_rolls || resJson[0].rolls.candidate_rolls != 0) {
+		if (resJson[0].ledger_info.candidate_ledger_info.balance != 0 || resJson[0].ledger_info.final_ledger_info.balance !=0 || resJson[0].ledger_info.locked_balance != 0 || resJson[0].rolls.final_rolls !=0 || resJson[0].rolls.active_rolls || resJson[0].rolls.candidate_rolls != 0) {
 
 			explorerSearchAddressXhr= null;
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
@@ -628,11 +628,11 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	addheader('Address ' + String(jsondata['what']));
 	
-	var final_balance = new Decimal(jsondata[0].balance.final_balance)
+	var final_balance = new Decimal(jsondata[0].ledger_info.final_ledger_info.balance)
 	addrow('Final balance', final_balance);
-	var candidate_balance = new Decimal(jsondata[0].balance.candidate_balance)
+	var candidate_balance = new Decimal(jsondata[0].ledger_info.candidate_ledger_info.balance)
 	addrow('Candidate balance', candidate_balance);
-	var locked_balance = new Decimal(jsondata[0].balance.locked_balance)
+	var locked_balance = new Decimal(jsondata[0].ledger_info.locked_balance)
 	addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
