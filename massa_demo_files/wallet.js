@@ -454,6 +454,6 @@ walletUpdateBalancesInfo= function() {
         reqval.push(k)
     }
 	if(reqval != '')
-        data = reqval
-        explorerGetViewIntervalXhr = JsonRPCRequest('get_addresses', [data], onresponse, onerror);
+        data = [reqval]
+        walletUpdateBalancesXhr = JsonRPCRequest('get_addresses', data, onresponse, onerror);
 }
