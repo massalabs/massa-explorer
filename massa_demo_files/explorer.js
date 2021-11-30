@@ -782,16 +782,15 @@ explorerGetViewInterval= function() {
 		if (explorerGetViewIntervalResult.length > 0) {
 			var blocks_per_slot = {};
 			for(var i = 0 ; i < explorerGetViewIntervalResult.length ; i++) {
-				block_thread = explorerGetViewIntervalResult[i].slot.thread
-				block_period = explorerGetViewIntervalResult[i].slot.period
-				if (blocks_per_slot.hasOwnProperty(block_thread*nthreads + block_period)) {
-					blocks_per_slot[block_thread*nthreads + block_period] += 1
+				var block_thread = explorerGetViewIntervalResult[i].slot.thread
+				var block_period = explorerGetViewIntervalResult[i].slot.period
+				if (blocks_per_slot.hasOwnProperty(block_thread+block_period*nthreads)) {
+					blocks_per_slot[block_thread+block_period*nthreads] += 1
 				}
 				else {
-					blocks_per_slot[block_thread*nthreads + block_period] = 0
+					blocks_per_slot[block_thread+block_period*nthreads] = 0
 				}
-				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (block_period + block_thread/nthreads) * explorerT0) / 1000 - blocks_per_slot[block_thread*nthreads + block_period]*blocksymbolsize*explorerViewTimespan/canvw*1.2
-				// explorerGetViewIntervalResult[i].shift = blocks_per_slot[block_thread*nthreads + block_period]
+				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (block_period + block_thread/nthreads) * explorerT0) / 1000 - blocks_per_slot[block_thread+block_period*nthreads]*blocksymbolsize*explorerViewTimespan/canvw*1.2
 			}
 
 			if(explorerViewScrolling && explorerGetViewIntervalResult.length > 0) {
