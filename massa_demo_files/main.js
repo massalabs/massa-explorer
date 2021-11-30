@@ -55,7 +55,6 @@ if (typeof document.addEventListener === "undefined" || hidden === undefined) {
 // If the page is hidden, pause the video;
 // if the page is shown, play the video
 function handleVisibilityChange() {
-	console.log(hidden, visibilityChange)
 	if (document[hidden]) {
 		clearTimeout(explorerGetViewIntervalTimeout)
 	} else {
