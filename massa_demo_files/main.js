@@ -31,6 +31,38 @@ initPages= function() {
 	// stakingInit();
 }
 
+// Set the name of the hidden property and the change event for visibility
+var hidden, visibilityChange;
+if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+  hidden = "hidden";
+  visibilityChange = "visibilitychange";
+} else if (typeof document.msHidden !== "undefined") {
+  hidden = "msHidden";
+  visibilityChange = "msvisibilitychange";
+} else if (typeof document.webkitHidden !== "undefined") {
+  hidden = "webkitHidden";
+  visibilityChange = "webkitvisibilitychange";
+}
+
+// Warn if the browser doesn't support addEventListener or the Page Visibility API
+if (typeof document.addEventListener === "undefined" || hidden === undefined) {
+	console.log("This demo requires a browser, such as Google Chrome or Firefox, that supports the Page Visibility API.");
+  } else {
+	// Handle page visibility change
+	document.addEventListener(visibilityChange, handleVisibilityChange, false);
+}
+
+// If the page is hidden, pause the video;
+// if the page is shown, play the video
+function handleVisibilityChange() {
+	console.log(hidden, visibilityChange)
+	if (document[hidden]) {
+		clearTimeout(explorerGetViewIntervalTimeout)
+	} else {
+		explorerGetViewInterval()
+	}
+  }
+
 JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 	var data = JSON.stringify({
 		"jsonrpc": "2.0",
@@ -75,6 +107,7 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
 	var url= "https://test.massa.net/api/v2/"+resource;
+	// var url= "http://127.0.0.1:5000/api/v2/"+resource;
 	console.log(url)
 
 	xhr.open(method, url, true);
