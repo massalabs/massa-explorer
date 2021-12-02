@@ -731,7 +731,7 @@ explorerSetInfo= function(data) {
 
 	div.innerHTML = '<span>\
 	Testnet version: <b>' + data.version + '</b><br>\
-	Last Reboot: <b>' + formattedTime + '</b><br>\
+	Start time: <b>' + formattedTime + '</b><br>\
 	Cycle: <b>' + data.current_cycle + '</b>, Period: <b>' + data.last_period + '</b><br>\
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON)) + ' tx/s' + '</b><br>\
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
