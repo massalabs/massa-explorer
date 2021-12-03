@@ -731,7 +731,7 @@ explorerSetInfo= function(data) {
 
 	div.innerHTML = '<span>\
 	Testnet version: <b>' + data.version + '</b><br>\
-	Last Reboot: <b>' + formattedTime + '</b><br>\
+	Start time: <b>' + formattedTime + '</b><br>\
 	Cycle: <b>' + data.current_cycle + '</b>, Period: <b>' + data.last_period + '</b><br>\
 	Transaction Throughput: <b>' + Math.round((data.final_operation_count / data.timespan * 1000 + Number.EPSILON)) + ' tx/s' + '</b><br>\
 	Block Throughput: <b>' + Math.round((data.final_block_count / data.timespan * 1000 + Number.EPSILON) * 1000) / 1000 + ' b/s' + '</b><br>\
@@ -782,16 +782,15 @@ explorerGetViewInterval= function() {
 		if (explorerGetViewIntervalResult.length > 0) {
 			var blocks_per_slot = {};
 			for(var i = 0 ; i < explorerGetViewIntervalResult.length ; i++) {
-				block_thread = explorerGetViewIntervalResult[i].slot.thread
-				block_period = explorerGetViewIntervalResult[i].slot.period
-				if (blocks_per_slot.hasOwnProperty(block_thread*nthreads + block_period)) {
-					blocks_per_slot[block_thread*nthreads + block_period] += 1
+				var block_thread = explorerGetViewIntervalResult[i].slot.thread
+				var block_period = explorerGetViewIntervalResult[i].slot.period
+				if (blocks_per_slot.hasOwnProperty(block_thread+block_period*nthreads)) {
+					blocks_per_slot[block_thread+block_period*nthreads] += 1
 				}
 				else {
-					blocks_per_slot[block_thread*nthreads + block_period] = 0
+					blocks_per_slot[block_thread+block_period*nthreads] = 0
 				}
-				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (block_period + block_thread/nthreads) * explorerT0) / 1000 - blocks_per_slot[block_thread*nthreads + block_period]*blocksymbolsize*explorerViewTimespan/canvw*1.2
-				// explorerGetViewIntervalResult[i].shift = blocks_per_slot[block_thread*nthreads + block_period]
+				explorerGetViewIntervalResult[i].timestamp = (explorerGenesisTimestamp + (block_period + block_thread/nthreads) * explorerT0) / 1000 - blocks_per_slot[block_thread+block_period*nthreads]*blocksymbolsize*explorerViewTimespan/canvw*1.2
 			}
 
 			if(explorerViewScrolling && explorerGetViewIntervalResult.length > 0) {
