@@ -419,24 +419,19 @@ walletUpdateBalancesInfo= function() {
 
 	function onresponse(resJson, xhr) {
 		walletUpdateBalancesXhr= null;
-		
-		for(var k in resJson) {
-            if(!resJson.hasOwnProperty(k))
+
+        for (var i=0; i < resJson.length; i++) {
+            wallet_addrs[resJson[i].address].balance = resJson[i].balance.final_balance;
+            wallet_addrs[resJson[i].address].candidate_balance = resJson[i].balance.candidate_balance;
+            var balancefield = document.getElementById('wallet_balance_'+resJson[i].address);
+            if(!balancefield)
                 continue;
-            for (var i=0; i < resJson.length; i++) {
-            // for (var k in wallet_addrs) {
-                wallet_addrs[resJson[i].address].balance = resJson[i].balance.final_balance;
-                wallet_addrs[resJson[i].address].candidate_balance = resJson[i].balance.candidate_balance;
-                var balancefield = document.getElementById('wallet_balance_'+resJson[i].address);
-                if(!balancefield)
-                    continue;
-                if (wallet_addrs[resJson[i].address].balance == wallet_addrs[resJson[i].address].candidate_balance) {
-                    balancefield.innerHTML = wallet_addrs[resJson[i].address].balance;
-                }
-                else
-                    balancefield.innerHTML = wallet_addrs[resJson[i].address].balance + '<br>(' + wallet_addrs[resJson[i].address].candidate_balance + ')';
+            if (wallet_addrs[resJson[i].address].balance == wallet_addrs[resJson[i].address].candidate_balance) {
+                balancefield.innerHTML = wallet_addrs[resJson[i].address].balance;
             }
-		}
+            else
+                balancefield.innerHTML = wallet_addrs[resJson[i].address].balance + '<br>(' + wallet_addrs[resJson[i].address].candidate_balance + ')';
+        }
 		wallet_update_info();
 		walletUpdateBalancesTimeout= setTimeout(walletUpdateBalancesInfo, 10000, false)
 	}
