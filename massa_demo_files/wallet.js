@@ -97,7 +97,7 @@ walletInit= function() {
         // validate amount
         var sendamount= null;
         try {
-            sendamount = new Decimal(parseInt(new Decimal(wallet_sendamount.value).times(1e9))).dividedBy(1e9);
+            sendamount = new Decimal(wallet_sendamount.value);
             let sendamount_mul = sendamount.times(1e9);
             if(isNaN(sendamount_mul) || sendamount_mul < 0 || sendamount_mul > (Math.pow(2, 64) - 1))
                 throw "Invalid amount.";
@@ -113,7 +113,7 @@ walletInit= function() {
             if(wallet_sendfee.value == "") {
                 wallet_sendfee.value = 0;
             }
-            sendfee = new Decimal(parseInt(new Decimal(wallet_sendfee.value).times(1e9))).dividedBy(1e9);
+            sendfee = new Decimal(wallet_sendfee.value);
             let sendfee_mul = sendfee.times(1e9);
             if(isNaN(sendfee_mul) || (sendfee_mul < 0) || (sendfee_mul > (Math.pow(2, 64) - 1)))
                 throw "Invalid fee.";
