@@ -27,7 +27,6 @@ jobs:
         env:
           HOST: ${{ secrets.HOST }}
           USERNAME: ${{ secrets.USERNAME }}
-          PORT: ${{ secrets.PORT }}
           KEY: ${{ secrets.SSHKEY }}
         with:
           source: "."
