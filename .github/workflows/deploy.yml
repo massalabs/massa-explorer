@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: deploy
 
 # Controls when the workflow will run
@@ -29,7 +27,6 @@ jobs:
         env:
           HOST: ${{ secrets.HOST }}
           USERNAME: ${{ secrets.USERNAME }}
-          PORT: ${{ secrets.PORT }}
           KEY: ${{ secrets.SSHKEY }}
         with:
           source: "."

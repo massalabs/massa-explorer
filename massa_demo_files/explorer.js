@@ -28,9 +28,9 @@ explorerGenesisTimestamp = null
 explorerT0 = null
 explorerGetConfig= function() {
 	function onresponse(resJson, xhr) {
-		nthreads = resJson.algo_config.thread_count
-		explorerGenesisTimestamp = resJson.algo_config.genesis_timestamp
-		explorerT0 = resJson.algo_config.t0
+		nthreads = resJson.config.thread_count
+		explorerGenesisTimestamp = resJson.config.genesis_timestamp
+		explorerT0 = resJson.config.t0
 	}
 	function onerror(error, xhr) {
 		if(explorerGetViewIntervalXhr != null) { // yeah, otherwise we actually wanted it to die
