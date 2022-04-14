@@ -482,7 +482,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
 				parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
 				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(op_bytes_compact))
 				var tdc = addrow('Transaction', null)
 				tdc.appendChild(createSearchLink(String(tx_id)));
 			}
