@@ -30,4 +30,4 @@ jobs:
           KEY: ${{ secrets.SSHKEY }}
         with:
           source: "."
-          target: "/var/www/html/massa-explorer"
+          target: "/var/www/v1"
