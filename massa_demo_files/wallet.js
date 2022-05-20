@@ -1,3 +1,8 @@
+async function schnorr_sign(transac, privkey) {
+    var signature = await nobleSecp256k1.schnorr.sign(transac, privkey);
+    return signature
+}
+
 wallet_addrs= {};
 wallet_empty= true;
 wallet_sending= false;
@@ -52,7 +57,7 @@ walletInit= function() {
         var reskey= null;
         // validate format
         try {
-            reskey= parse_textprivkey(wallet_addrinput.value);
+            reskey = parse_textprivkey(wallet_addrinput.value);
         }
         catch(e) {console.log(e)}
         
@@ -67,7 +72,6 @@ walletInit= function() {
     }, false);
     document.getElementById('trans_send').addEventListener("submit", function(e) {
         e.preventDefault();
-        var restransac= null;
         // validate sender address
         var sendfrompubkey= null;
         var sendfromprivkey= null;
@@ -87,9 +91,9 @@ walletInit= function() {
         var sendtoaddr= null;
         var sendtopkh= null;
         try {
-            var parsed= xbqcrypto.parse_address(wallet_sendtoaddr.value);
-            sendtopkh= parsed.pubkeyhash;
-            sendtoaddr= wallet_sendtoaddr.value;
+            var parsed = xbqcrypto.parse_address(wallet_sendtoaddr.value);
+            sendtopkh = parsed.pubkeyhash;
+            sendtoaddr = wallet_sendtoaddr.value;
             wallet_sendtoaddr.removeAttribute("aria-invalid");
         } catch(e) {
             wallet_sendtoaddr.setAttribute("aria-invalid", "true");
@@ -145,19 +149,24 @@ walletInit= function() {
                 transac.content["sender_public_key"] = sendfromb58cpubkey
                 transac.content["fee"] = sendfee.toString()
                 transac.content["expire_period"] = latest_period + 5
+                // transac.content["expire_period"] = 11775
                 transac.content.op.Transaction["recipient_address"] = sendtoaddr
                 transac.content.op.Transaction["amount"] = sendamount.toString()
                 
-                var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey), 16)
-                transac["signature"] = sign_content(transac, privkey)
+                var privkey = xbqcrypto.base58check_decode(sendfromb58cprivkey);
+                // var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey), 16)
+                
+                sign_content(transac, privkey)
+                // console.log('transac["signature"]')
+                // console.log(transac["signature"])
             } catch(e) { alert('Error while generating transaction: ' + e); }
         }
         // send transaction
         if(transac != null) {
-            wallet_sending= true;
+            wallet_sending = true;
             wallet_update_sendform();
             wallet_update_info();
-            walletSendTransaction(transac);
+            // walletSendTransaction(transac);
         }
        
     }, false);
@@ -174,35 +183,27 @@ function sign_content(transaction, privkey) {
     transaction.content.sender_public_key, 0, transaction.content.op.Transaction.recipient_address, parsed_amount)
 
     // Hash byte compact
-    var hash_encoded_data = xbqcrypto.hash_sha256(encoded_data)
+    var hash_encoded_data = xbqcrypto.hash_blake3(encoded_data)
 
     // Signing a digest
-    var digest = Secp256k1.uint256(hash_encoded_data)
-    const sig = Secp256k1.ecsign(privkey, digest)
-    return xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([xbqcrypto.Buffer.from(sig.r, "hex"), xbqcrypto.Buffer.from(sig.s, "hex")]))
+    schnorr_sign(hash_encoded_data, privkey).then((signature) => {
+        transaction["signature"] = xbqcrypto.base58check_encode(signature);
+        walletSendTransaction(transaction);
+    });
 }
 
-parse_textprivkey= function(txt) {
-    // Parse private key
+parse_textprivkey = function(txt) {
     var parsed = xbqcrypto.parse_private_base58check(txt);
-    var privkey= parsed.privkey;
-    privkey = Secp256k1.uint256(privkey, 16)
-    // Get pubkey
-    var pubkey = Secp256k1.generatePublicKeyFromPrivateKeyData(privkey);
-    pubY = Secp256k1.uint256(pubkey.y, 16)
-    var prefix = (pubY.isEven() ? 0x02 : 0x03);
-    prefix = xbqcrypto.Buffer.from([prefix], "hex")
-    var pubkey = xbqcrypto.Buffer.concat([prefix, xbqcrypto.Buffer.from(pubkey.x, "hex")])
-    // Get address
-    var addr = xbqcrypto.deduce_address(pubkey);
-    // Get thread
+    var privkey = parsed.privkey;
+    var pubkey = nobleSecp256k1.schnorr.getPublicKey(parsed.privkey);
+    var b58cpubkey = xbqcrypto.base58check_encode(nobleSecp256k1.schnorr.getPublicKey(parsed.privkey));
+    var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
+    var addr = 'A' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))
     var thread = xbqcrypto.get_address_thread(addr);
-    // Get base58check pubkey
-    var b58cpubkey = xbqcrypto.deduce_public_base58check(pubkey);
     return {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, thread: thread};
 }
 
-wallet_upload= function() {
+wallet_upload = function() {
     try {
         if(wallet_loadf.files.length != 1)
             return;
@@ -398,8 +399,8 @@ walletSendTransaction= function(data) {
 	}
 	function onerror(error, xhr) {
 		if(walletSendTransactionXhr != null) { // yeah, otherwise we actually wanted it to die
-			walletSendTransactionXhr= null;
-			if(confirm('An network error occured while sending the transaction: '+ error +'. Retry ?')) {
+			walletSendTransactionXhr = null;
+			if(confirm('An network error occured while sending the transaction: '+ error.message +'. Retry ?')) {
 			    walletSendTransaction(data);
 			} else {
 			    wallet_sending= false;

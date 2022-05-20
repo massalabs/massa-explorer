@@ -65,7 +65,8 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 		}
 	  });
 	  
-	  xhr.open("POST", "https://test.massa.net/api/v2");
+	//   xhr.open("POST", "https://test.massa.net/api/v2");
+	  xhr.open("POST", "https://labnet.massa.net/api/v2");
 	  xhr.setRequestHeader("Content-Type", "application/json");
 	  
 	  xhr.send(data);
@@ -74,7 +75,8 @@ JsonRPCRequest = function(resource, data, completion_callback, error_callback) {
 
 RESTRequest= function(method, resource, data, completion_callback, error_callback) {
 	var xhr= new XMLHttpRequest();
-	var url= "https://test.massa.net/api/v2/"+resource;
+	// var url= "https://test.massa.net/api/v2/"+resource;
+	var url= "https://labnet.massa.net/api/v2/"+resource;
 	console.log(url)
 
 	xhr.open(method, url, true);
