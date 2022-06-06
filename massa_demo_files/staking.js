@@ -201,7 +201,7 @@ stakingInfoSetTable = function(jsondata) {
 	// 	hth.appendChild(document.createTextNode(String(h)));
 	// }
 
-	var addrow= function(field, content1, content2) {
+	var addrow = function(field, content1, content2) {
 		var tr = document.createElement('TR');
 		tab.appendChild(tr);
 		var td_field = document.createElement('TD');
@@ -229,24 +229,24 @@ stakingInfoSetTable = function(jsondata) {
 	}
 
     // Create items array
-    var items = Object.keys(jsondata).map(function(key) {
-    return [key, jsondata[key]];
-    });
+    // var items = Object.keys(stakingInfoResult).map(function(key) {
+    //     return [key, stakingInfoResult[key]];
+    // });
     
     // Sort the array based on the second element
-    items.sort(function(first, second) {
-    return second[1] - first[1];
+    stakingInfoResult.sort(function(first, second) {
+        return second[1] - first[1];
     });
 
     var totstakers = 0
     var totrolls = 0
-    items.forEach(function (item, index) {
+    stakingInfoResult.forEach(function (item, index) {
         totstakers = index
         totrolls += item[1]
     });
     totstakers += 1
 
-    items.forEach(function (item, index) {
+    stakingInfoResult.forEach(function (item, index) {
         // if (index<500) {
         addrow(createSearchLink(item[0]), item[1], Math.round(item[1] / totrolls * 100 * 100) / 100)
         // }

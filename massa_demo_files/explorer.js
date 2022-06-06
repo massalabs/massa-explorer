@@ -450,7 +450,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 			addrow('Status', 'Active')
 		}
 		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(jsondata.block.header.content['creator'], 0)))
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.block.header.content['creator']))))
 		addrow('Thread', jsondata.block.header.content.slot['thread'])
 		addrow('Period', jsondata.block.header.content.slot['period'])
 		addrow('Signature', jsondata.block.header['signature'])
