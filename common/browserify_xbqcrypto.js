@@ -3,7 +3,7 @@ const createhash = require('create-hash')
 const randombytes = require('randombytes')
 const bs58check = require('bs58check')
 const { blake3 } = require('@noble/hashes/blake3');
-const { sha256 } = require('@noble/hashes/sha256');
+// const { sha256 } = require('@noble/hashes/sha256');
 var varint = require('varint');
 
 function varint_encode(data) {
@@ -52,9 +52,9 @@ function parse_address(address) {
     return {pubkeyhash: pubkeyhash.slice(1)};
 }
 
-// function deduce_private_base58check(privkey, version) {
-//     return 'PVK' + base58check_encode(Buffer.concat([Buffer.from([version]), privkey]));
-// }
+function deduce_private_base58check(privkey) {
+    return base58check_encode(privkey);
+}
 
 function parse_private_base58check(privb58c) {
     const privkey = base58check_decode(privb58c);
@@ -108,7 +108,7 @@ module.exports = {
     get_pubkey_from_privkey: get_pubkey_from_privkey,
     deduce_address: deduce_address,
     parse_address: parse_address,
-    // deduce_private_base58check: deduce_private_base58check,
+    deduce_private_base58check: deduce_private_base58check,
     parse_private_base58check: parse_private_base58check,
     deduce_public_base58check: deduce_public_base58check,
     parse_public_base58check: parse_public_base58check,
