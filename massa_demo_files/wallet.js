@@ -1,5 +1,5 @@
 async function schnorr_sign(transac, privkey) {
-    var signature = await nobleSecp256k1.schnorr.sign(transac, privkey);
+    var signature = await xbqcrypto.schnorr_sign(transac, privkey);
     return signature
 }
 
@@ -49,7 +49,8 @@ walletInit= function() {
     });
 
     document.getElementById('genaddr').addEventListener("click", function() {
-        wallet_addrinput.value= xbqcrypto.deduce_private_base58check(window.crypto.getRandomValues(new Uint8Array(32)));
+        wallet_addrinput.value = xbqcrypto.deduce_private_base58check(xbqcrypto.generate_random_privkey());
+        // wallet_addrinput.value = xbqcrypto.deduce_private_base58check(window.crypto.getRandomValues(new Uint8Array(32)));
         wallet_addrinput.removeAttribute("aria-invalid");
     });
     document.getElementById('waddr_add').addEventListener("submit", function(e) {
@@ -149,16 +150,12 @@ walletInit= function() {
                 transac.content["sender_public_key"] = sendfromb58cpubkey
                 transac.content["fee"] = sendfee.toString()
                 transac.content["expire_period"] = latest_period + 5
-                // transac.content["expire_period"] = 11775
                 transac.content.op.Transaction["recipient_address"] = sendtoaddr
                 transac.content.op.Transaction["amount"] = sendamount.toString()
-                
+
                 var privkey = xbqcrypto.base58check_decode(sendfromb58cprivkey);
-                // var privkey = Secp256k1.uint256(xbqcrypto.base58check_decode(sendfromb58cprivkey), 16)
-                
+
                 sign_content(transac, privkey)
-                // console.log('transac["signature"]')
-                // console.log(transac["signature"])
             } catch(e) { alert('Error while generating transaction: ' + e); }
         }
         // send transaction
@@ -195,8 +192,8 @@ function sign_content(transaction, privkey) {
 parse_textprivkey = function(txt) {
     var parsed = xbqcrypto.parse_private_base58check(txt);
     var privkey = parsed.privkey;
-    var pubkey = nobleSecp256k1.schnorr.getPublicKey(parsed.privkey);
-    var b58cpubkey = xbqcrypto.base58check_encode(nobleSecp256k1.schnorr.getPublicKey(parsed.privkey));
+    var pubkey = xbqcrypto.schnorr_get_pubkey(parsed.privkey);
+    var b58cpubkey = xbqcrypto.base58check_encode(pubkey);
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
     var addr = 'A' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))
     var thread = xbqcrypto.get_address_thread(addr);

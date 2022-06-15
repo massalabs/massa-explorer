@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@noble/hashes": "^1.0.0",
+    "@noble/secp256k1": "^1.5.5",
     "blake3": "^2.1.7",
     "bs58check": "^2.1.2",
     "create-hash": "^1.2.0",
-    "randombytes": "^2.1.0",
     "tiny-secp256k1": "^1.1.6",
     "varint": "^6.0.0",
     "xmlhttprequest": "^1.8.0"
