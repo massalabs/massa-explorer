@@ -1,5 +1,5 @@
-async function schnorr_sign(transac, privkey) {
-    var signature = await xbqcrypto.schnorr_sign(transac, privkey);
+async function sign(transac, privkey) {
+    var signature = await xbqcrypto.sign(transac, privkey);
     return signature
 }
 
@@ -183,7 +183,7 @@ function sign_content(transaction, privkey) {
     var hash_encoded_data = xbqcrypto.hash_blake3(encoded_data)
 
     // Signing a digest
-    schnorr_sign(hash_encoded_data, privkey).then((signature) => {
+    sign(hash_encoded_data, privkey).then((signature) => {
         transaction["signature"] = xbqcrypto.base58check_encode(signature);
         walletSendTransaction(transaction);
     });
@@ -192,7 +192,7 @@ function sign_content(transaction, privkey) {
 parse_textprivkey = function(txt) {
     var parsed = xbqcrypto.parse_private_base58check(txt);
     var privkey = parsed.privkey;
-    var pubkey = xbqcrypto.schnorr_get_pubkey(parsed.privkey);
+    var pubkey = xbqcrypto.get_pubkey(parsed.privkey);
     var b58cpubkey = xbqcrypto.base58check_encode(pubkey);
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
     var addr = 'A' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))

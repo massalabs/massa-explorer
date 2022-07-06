@@ -1,7 +1,7 @@
 const bs58check = require('bs58check')
 const base58 = require('bs58')
 const { blake3 } = require('@noble/hashes/blake3');
-const { utils, schnorr } = require("@noble/secp256k1");
+const { utils, getPublicKey } = require("@noble/ed25519");
 var varint = require('varint');
 
 function varint_encode(data) {
@@ -16,12 +16,12 @@ function hash_blake3(data) {
     return blake3(data)
 }
 
-function schnorr_sign(data, privkey) {
+function sign(data, privkey) {
     return schnorr.sign(data, privkey)
 }
 
-function schnorr_get_pubkey(privkey) {
-    return schnorr.getPublicKey(privkey)
+function get_pubkey(privkey) {
+    return getPublicKey(privkey)
 }
 
 function base58check_encode(data) {
@@ -102,8 +102,8 @@ module.exports = {
     get_address_thread: get_address_thread,
     hash_blake3: hash_blake3,
     compute_bytes_compact: compute_bytes_compact,
-    schnorr_sign: schnorr_sign,
-    schnorr_get_pubkey: schnorr_get_pubkey,
+    sign: sign,
+    get_pubkey: get_pubkey,
     base58_decode: base58_decode,
     Buffer: Buffer
 }
