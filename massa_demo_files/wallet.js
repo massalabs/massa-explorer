@@ -50,7 +50,6 @@ walletInit= function() {
 
     document.getElementById('genaddr').addEventListener("click", function() {
         wallet_addrinput.value = xbqcrypto.deduce_private_base58check(xbqcrypto.generate_random_privkey());
-        // wallet_addrinput.value = xbqcrypto.deduce_private_base58check(window.crypto.getRandomValues(new Uint8Array(32)));
         wallet_addrinput.removeAttribute("aria-invalid");
     });
     document.getElementById('waddr_add').addEventListener("submit", function(e) {
@@ -58,17 +57,20 @@ walletInit= function() {
         var reskey= null;
         // validate format
         try {
-            reskey = parse_textprivkey(wallet_addrinput.value);
+            parse_textprivkey(wallet_addrinput.value).then(
+                (reskey) => {
+                    var reskey = reskey;
+                    if(reskey != null) {
+                        wallet_addrinput.removeAttribute("aria-invalid");
+                        wallet_addrinput.value= '';
+                        wallet_add_key(reskey);
+                    }
+                    else
+                        wallet_addrinput.setAttribute("aria-invalid", "true");
+                }
+            );
         }
         catch(e) {console.log(e)}
-        
-        if(reskey != null) {
-            wallet_addrinput.removeAttribute("aria-invalid");
-            wallet_addrinput.value= '';
-            wallet_add_key(reskey);
-        }
-        else
-            wallet_addrinput.setAttribute("aria-invalid", "true");
        
     }, false);
     document.getElementById('trans_send').addEventListener("submit", function(e) {
@@ -189,15 +191,16 @@ function sign_content(transaction, privkey) {
     });
 }
 
-parse_textprivkey = function(txt) {
+parse_textprivkey = async function(txt) {
     var parsed = xbqcrypto.parse_private_base58check(txt);
     var privkey = parsed.privkey;
-    var pubkey = xbqcrypto.get_pubkey(parsed.privkey);
+    var pubkey = await xbqcrypto.get_pubkey(parsed.privkey);
     var b58cpubkey = xbqcrypto.base58check_encode(pubkey);
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
     var addr = 'A' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))
     var thread = xbqcrypto.get_address_thread(addr);
-    return {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, thread: thread};
+    var parsed_privkey = {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, thread: thread};
+    return parsed_privkey
 }
 
 wallet_upload = function() {
@@ -208,11 +211,11 @@ wallet_upload = function() {
         reader.onload = function(evt) {
             try {
                 var resobj = JSON.parse(evt.target.result);
-                var privs= resobj;
-                var new_addrs= {};
+                var privs = resobj;
+                var new_addrs = {};
                 for(var i= 0 ; i < privs.length ; i++) {
-                    var reskey= parse_textprivkey(privs[i]);
-                    new_addrs[reskey.address]= {'key':reskey, 'balance':null}
+                    var reskey = parse_textprivkey(privs[i]);
+                    new_addrs[reskey.address] = {'key':reskey, 'balance':null}
                 }
                 wallet_addrs= new_addrs;
                 wallet_reading= false;
