@@ -1,7 +1,7 @@
 const bs58check = require('bs58check')
 const base58 = require('bs58')
 const { blake3 } = require('@noble/hashes/blake3');
-const { utils, schnorr } = require("@noble/secp256k1");
+const { utils, getPublicKey, sign, verify } = require("@noble/ed25519");
 var varint = require('varint');
 
 function varint_encode(data) {
@@ -16,12 +16,8 @@ function hash_blake3(data) {
     return blake3(data)
 }
 
-function schnorr_sign(data, privkey) {
-    return schnorr.sign(data, privkey)
-}
-
-function schnorr_get_pubkey(privkey) {
-    return schnorr.getPublicKey(privkey)
+function get_pubkey(privkey) {
+    return getPublicKey(privkey)
 }
 
 function base58check_encode(data) {
@@ -53,13 +49,15 @@ function parse_address(address) {
     return {pubkeyhash: pubkeyhash.slice(1)};
 }
 
-function deduce_private_base58check(privkey) {
-    return base58check_encode(privkey);
+function deduce_private_base58check(privkey, version) {
+    var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(version));
+    return 'S' + base58check_encode(xbqcrypto.Buffer.concat([version, privkey]));
+    // return base58check_encode(privkey);
 }
 
 function parse_private_base58check(privb58c) {
-    const privkey = base58check_decode(privb58c);
-    return {privkey: privkey};
+    const privkey = base58check_decode(privb58c.slice(1)).slice(1);
+    return privkey;
 }
 
 function deduce_public_base58check(pubkey) {
@@ -77,14 +75,13 @@ function get_address_thread(address) {
     return parse_address(address).pubkeyhash.readUInt8(0) >> 3;
 }
 
-function compute_bytes_compact(fee, expire_period, sender_pubkey, type_id, recipient_address, amount) {
+function compute_bytes_compact(fee, expire_period, type_id, recipient_address, amount) {
     var encoded_fee = Buffer.from(xbqcrypto.varint_encode(fee))
     var encoded_expire_periode = Buffer.from(xbqcrypto.varint_encode(expire_period))
     var encoded_type_id = Buffer.from(xbqcrypto.varint_encode(type_id))
     var encoded_amount = Buffer.from(xbqcrypto.varint_encode(amount))
-    sender_pubkey = base58check_decode(sender_pubkey)
     recipient_address = base58check_decode(recipient_address.slice(1)).slice(1)
-    return Buffer.concat([encoded_fee, encoded_expire_periode, sender_pubkey, encoded_type_id, recipient_address, encoded_amount])
+    return Buffer.concat([encoded_fee, encoded_expire_periode, encoded_type_id, recipient_address, encoded_amount])
 }
 
 module.exports = {
@@ -102,8 +99,9 @@ module.exports = {
     get_address_thread: get_address_thread,
     hash_blake3: hash_blake3,
     compute_bytes_compact: compute_bytes_compact,
-    schnorr_sign: schnorr_sign,
-    schnorr_get_pubkey: schnorr_get_pubkey,
+    sign: sign,
+    verify: verify,
+    get_pubkey: get_pubkey,
     base58_decode: base58_decode,
     Buffer: Buffer
 }
