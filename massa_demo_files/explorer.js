@@ -450,7 +450,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 			addrow('Status', 'Active')
 		}
 		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.block.header.content['creator']))))
+		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.block.header.creator_address.slice(1)))))
 		addrow('Thread', jsondata.block.header.content.slot['thread'])
 		addrow('Period', jsondata.block.header.content.slot['period'])
 		addrow('Signature', jsondata.block.header['signature'])
@@ -481,7 +481,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 			else if (Object.keys(operations[i].content.op)[0] == 'Transaction') {
 				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
 				parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
-				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, operations[i].content.sender_public_key, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
+				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
 				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(op_bytes_compact))
 				var tdc = addrow('Transaction', null)
 				tdc.appendChild(createSearchLink(String(tx_id)));
@@ -550,14 +550,14 @@ explorerSetTransactionSearchTable= function(jsondata) {
 	
 	addheader('Operation ' + String(jsondata['what']))
 	var operation_type = Object.keys(jsondata[0].operation.content.op)[0]
-	var tdc= addrow('Operation type', operation_type)
+	var tdc = addrow('Operation type', operation_type)
 	if(operation_type == "RollBuy") {
 		var roll_count = jsondata[0].operation.content.op.RollBuy.roll_count
-		var tdc= addrow('Roll Count', roll_count);
+		var tdc = addrow('Roll Count', roll_count);
 	}
 	var transactionInBlocks = jsondata[0].in_blocks;
 	for (var i = 0 ; i <transactionInBlocks.length; i++) {
-		var tdc= addrow('In block', null);
+		var tdc = addrow('In block', null);
 		tdc.appendChild(createSearchLink(transactionInBlocks[i]));
 	}
 	if(jsondata[0].is_final) {
@@ -566,9 +566,7 @@ explorerSetTransactionSearchTable= function(jsondata) {
 	else {
 		addrow('Finality state', 'Pending');
 	}
-	var addr = String(jsondata[0].operation.content.sender_public_key);
-	addr = xbqcrypto.parse_public_base58check(addr).pubkey
-	addr = xbqcrypto.deduce_address(addr)
+	var addr = String(jsondata[0].operation.creator_address);
 	var tdc= addrow('From', null);
 	tdc.appendChild(createSearchLink(addr));
 	if(operation_type=="Transaction") {

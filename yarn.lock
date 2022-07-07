@@ -7,10 +7,10 @@
   "resolved" "https://registry.npmjs.org/@noble/ed25519/-/ed25519-1.6.1.tgz"
   "version" "1.6.1"
 
-"@noble/hashes@^1.0.0":
-  "integrity" "sha512-DZVbtY62kc3kkBtMHqwCOfXrT/hnoORy5BJ4+HU1IR59X0KWAOqsfzQPcUl/lQLlG7qXbe/fZ3r/emxtAl+sqg=="
-  "resolved" "https://registry.npmjs.org/@noble/hashes/-/hashes-1.0.0.tgz"
-  "version" "1.0.0"
+"@noble/hashes@^1.1.2":
+  "integrity" "sha512-KYRCASVTv6aeUi1tsF8/vpyR7zpfs3FUzy2Jqm+MU+LmUKhQ0y2FpfwqkCcxSg2ua4GALJd8k2R76WxwZGbQpA=="
+  "resolved" "https://registry.npmjs.org/@noble/hashes/-/hashes-1.1.2.tgz"
+  "version" "1.1.2"
 
 "base-x@^3.0.2":
   "integrity" "sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ=="
