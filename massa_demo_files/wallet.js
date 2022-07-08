@@ -54,7 +54,6 @@ walletInit= function() {
     });
     document.getElementById('waddr_add').addEventListener("submit", function(e) {
         e.preventDefault();
-        var reskey= null;
         // validate format
         try {
             parse_textprivkey(wallet_addrinput.value).then(

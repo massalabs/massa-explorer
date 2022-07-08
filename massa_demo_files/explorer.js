@@ -550,10 +550,10 @@ explorerSetTransactionSearchTable= function(jsondata) {
 	
 	addheader('Operation ' + String(jsondata['what']))
 	var operation_type = Object.keys(jsondata[0].operation.content.op)[0]
-	var tdc = addrow('Operation type', operation_type)
+	addrow('Operation type', operation_type)
 	if(operation_type == "RollBuy") {
 		var roll_count = jsondata[0].operation.content.op.RollBuy.roll_count
-		var tdc = addrow('Roll Count', roll_count);
+		addrow('Roll Count', roll_count);
 	}
 	var transactionInBlocks = jsondata[0].in_blocks;
 	for (var i = 0 ; i <transactionInBlocks.length; i++) {
