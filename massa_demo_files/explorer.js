@@ -450,7 +450,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 			addrow('Status', 'Active')
 		}
 		var tdc = addrow('Creator', null)
-		tdc.appendChild(createSearchLink(xbqcrypto.deduce_address(xbqcrypto.base58check_decode(jsondata.block.header.creator_address.slice(1)))))
+		tdc.appendChild(createSearchLink(jsondata.block.header.creator_address))
 		addrow('Thread', jsondata.block.header.content.slot['thread'])
 		addrow('Period', jsondata.block.header.content.slot['period'])
 		addrow('Signature', jsondata.block.header['signature'])
@@ -490,11 +490,9 @@ explorerSetBlockSearchTable= function(jsondata) {
 		
 		for (var i=0; i<jsondata.block.header.content.endorsements.length; i++) {
 			// TODO: Move to endorsement id when endpoint is present.
-			var endorser_pubkey = jsondata.block.header.content.endorsements[i].creator_public_key
-			var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
-			var endorser_address = xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(xbqcrypto.base58check_decode(endorser_pubkey.slice(1)))]));
+			var endorser_address = jsondata.block.header.content.endorsements[i].creator_address;
 			var tdc = addrow('Endorsement', null)
-			tdc.appendChild(createSearchLink('A' + endorser_address));
+			tdc.appendChild(createSearchLink(endorser_address));
 		}
 
 		parentIds = jsondata.block.header.content['parents'];
