@@ -52,7 +52,6 @@ function parse_address(address) {
 function deduce_private_base58check(privkey, version) {
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(version));
     return 'S' + base58check_encode(xbqcrypto.Buffer.concat([version, privkey]));
-    // return base58check_encode(privkey);
 }
 
 function parse_private_base58check(privb58c) {
