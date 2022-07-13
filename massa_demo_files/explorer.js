@@ -474,7 +474,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 				var encoded_type_id = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(type_id))
 				var encoded_roll_count = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(operations[i].content.op[operation_type].roll_count))
 				var op_bytes_compact = xbqcrypto.Buffer.concat([encoded_fee, encoded_expire_period, sender_pubkey, encoded_type_id, encoded_roll_count])
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_blake3(xbqcrypto.Buffer.concat([op_bytes_compact, xbqcrypto.base58check_decode(operations[i].signature)])))
 				var tdc= addrow(operation_type, null)
 				tdc.appendChild(createSearchLink(String(tx_id)));
 			}
@@ -482,7 +482,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
 				parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
 				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_sha256(op_bytes_compact))
+				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_blake3(op_bytes_compact))
 				var tdc = addrow('Transaction', null)
 				tdc.appendChild(createSearchLink(String(tx_id)));
 			}
@@ -490,9 +490,9 @@ explorerSetBlockSearchTable= function(jsondata) {
 		
 		for (var i=0; i<jsondata.block.header.content.endorsements.length; i++) {
 			// TODO: Move to endorsement id when endpoint is present.
-			var endorser_pubkey = jsondata.block.header.content.endorsements[i].content.sender_public_key
+			var endorser_pubkey = jsondata.block.header.content.endorsements[i].creator_public_key
 			var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
-			var endorser_address = xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(xbqcrypto.base58check_decode(endorser_pubkey))]));
+			var endorser_address = xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(xbqcrypto.base58check_decode(endorser_pubkey.slice(1)))]));
 			var tdc = addrow('Endorsement', null)
 			tdc.appendChild(createSearchLink('A' + endorser_address));
 		}
