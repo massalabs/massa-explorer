@@ -336,7 +336,8 @@ explorerSearchAddress= function(what) {
 
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
-		if (resJson[0].ledger_info.candidate_ledger_info.balance != 0 || resJson[0].ledger_info.final_ledger_info.balance !=0 || resJson[0].ledger_info.locked_balance != 0 || resJson[0].rolls.final_rolls !=0 || resJson[0].rolls.active_rolls || resJson[0].rolls.candidate_rolls != 0) {
+		console.log(resJson)
+		if (resJson[0].candidate_parallel_balance != 0 || resJson[0].candidate_sequential_balance !=0 || resJson[0].final_parallel_balance != 0 || resJson[0].final_sequential_balance != 0 || resJson[0].candidate_roll_count !=0 || resJson[0].final_roll_count != 0) {
 
 			explorerSearchAddressXhr= null;
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
@@ -585,6 +586,7 @@ explorerSetTransactionSearchTable= function(jsondata) {
 
 explorerAddressSearchResult= null
 explorerSetAddressSearchTable= function(jsondata) {
+	console.log(jsondata)
 	explorerAddressSearchResult= jsondata
 	var div= document.getElementById('explorerAddressSearchResult');
 	if(!div) return;
@@ -627,31 +629,33 @@ explorerSetAddressSearchTable= function(jsondata) {
 	}
 
 	addheader('Address ' + String(jsondata['what']));
-	
-	var final_balance = new Decimal(jsondata[0].ledger_info.final_ledger_info.balance)
-	addrow('Final balance', final_balance);
-	var candidate_balance = new Decimal(jsondata[0].ledger_info.candidate_ledger_info.balance)
-	addrow('Candidate balance', candidate_balance);
-	var locked_balance = new Decimal(jsondata[0].ledger_info.locked_balance)
-	addrow('Locked balance', locked_balance);
+
+	var candidate_final_balance = new Decimal(jsondata[0].candidate_sequential_balance)
+	addrow('Sequential Candidate balance', candidate_final_balance);
+	var sequential_final_balance = new Decimal(jsondata[0].final_sequential_balance)
+	addrow('Sequential Final balance', sequential_final_balance);
+	var candidate_parallel_balance = new Decimal(jsondata[0].candidate_parallel_balance);
+	addrow('Parallel Candidate balance', candidate_parallel_balance);
+	var final_parallel_balance = new Decimal(jsondata[0].final_parallel_balance);
+	addrow('Parallel Final balance', final_parallel_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
 
-	var final_rolls = jsondata[0].rolls.final_rolls
+	var final_rolls = jsondata[0].final_roll_count
 	addrow('Final rolls', final_rolls);
-	var active_rolls = jsondata[0].rolls.active_rolls
+	var active_rolls = jsondata[0].cycle_infos[jsondata[0].cycle_infos.length - 1].active_rolls
 	addrow('Active rolls', active_rolls);
-	var candidate_rolls = jsondata[0].rolls.candidate_rolls
+	var candidate_rolls = jsondata[0].candidate_roll_count
 	addrow('Candidate rolls', candidate_rolls);
 
-	for (var i = 0 ; i <jsondata[0].involved_in_operations.length; i++) {
+	for (var i = 0 ; i <jsondata[0].created_operations.length; i++) {
 		var tdc = addrow('Operation', null);
-		tdc.appendChild(createSearchLink(String(jsondata[0].involved_in_operations[i])));
+		tdc.appendChild(createSearchLink(String(jsondata[0].created_operations[i])));
 	}
 
-	for(var i = 0 ; i < jsondata[0].blocks_created.length ; i++) {
+	for(var i = 0 ; i < jsondata[0].created_blocks.length ; i++) {
 		var tdc = addrow('Block', null);
-		tdc.appendChild(createSearchLink(String(jsondata[0].blocks_created[i])));
+		tdc.appendChild(createSearchLink(String(jsondata[0].created_blocks[i])));
 	}
 }
 
