@@ -1,2 +1,1 @@
-xbqcrypto= require('./browserify_xbqcrypto.js');
-
+xbqcrypto = require('./browserify_xbqcrypto.js');
