@@ -336,7 +336,7 @@ explorerSearchAddress= function(what) {
 
 	function onresponse(resJson, xhr) {
 		resJson['what'] = what
-		if (resJson[0].ledger_info.candidate_ledger_info.balance != 0 || resJson[0].ledger_info.final_ledger_info.balance !=0 || resJson[0].ledger_info.locked_balance != 0 || resJson[0].rolls.final_rolls !=0 || resJson[0].rolls.active_rolls || resJson[0].rolls.candidate_rolls != 0) {
+		if (resJson[0].candidate_balance != 0 || resJson[0].final_balance !=0 || resJson[0].locked_balance != 0 || resJson[0].final_roll_count !=0 || resJson[0].cycle_infos.active_rolls || resJson[0].candidate_roll_count != 0) {
 
 			explorerSearchAddressXhr= null;
 			// explorerSearchAddressTimeout= setTimeout(explorerSearchAddress, 10000, what, false)
@@ -627,30 +627,35 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	addheader('Address ' + String(jsondata['what']));
 	
-	var final_balance = new Decimal(jsondata[0].ledger_info.final_ledger_info.balance)
+	var final_balance = new Decimal(jsondata[0].final_balance)
 	addrow('Final balance', final_balance);
-	var candidate_balance = new Decimal(jsondata[0].ledger_info.candidate_ledger_info.balance)
+	var candidate_balance = new Decimal(jsondata[0].candidate_balance)
 	addrow('Candidate balance', candidate_balance);
-	var locked_balance = new Decimal(jsondata[0].ledger_info.locked_balance)
-	addrow('Locked balance', locked_balance);
+	// var locked_balance = new Decimal(jsondata[0].ledger_info.locked_balance)
+	// addrow('Locked balance', locked_balance);
 	var thread = xbqcrypto.get_address_thread(jsondata['what'])
 	addrow('Thread', thread);
 
-	var final_rolls = jsondata[0].rolls.final_rolls
+	var final_rolls = jsondata[0].final_roll_count
 	addrow('Final rolls', final_rolls);
-	var active_rolls = jsondata[0].rolls.active_rolls
+	var active_rolls = jsondata[0].cycle_infos.active_rolls
 	addrow('Active rolls', active_rolls);
-	var candidate_rolls = jsondata[0].rolls.candidate_rolls
+	var candidate_rolls = jsondata[0].candidate_roll_count
 	addrow('Candidate rolls', candidate_rolls);
 
-	for (var i = 0 ; i <jsondata[0].involved_in_operations.length; i++) {
-		var tdc = addrow('Operation', null);
-		tdc.appendChild(createSearchLink(String(jsondata[0].involved_in_operations[i])));
+	for(var i = 0 ; i < jsondata[0].created_endorsements.length ; i++) {
+		var tdc = addrow('Endorsements', null);
+		tdc.appendChild(createSearchLink(String(jsondata[0].created_endorsements[i])));
 	}
 
-	for(var i = 0 ; i < jsondata[0].blocks_created.length ; i++) {
+	for (var i = 0 ; i < jsondata[0].created_operations.length; i++) {
+		var tdc = addrow('Operation', null);
+		tdc.appendChild(createSearchLink(String(jsondata[0].created_operations[i])));
+	}
+
+	for(var i = 0 ; i < jsondata[0].created_blocks.length ; i++) {
 		var tdc = addrow('Block', null);
-		tdc.appendChild(createSearchLink(String(jsondata[0].blocks_created[i])));
+		tdc.appendChild(createSearchLink(String(jsondata[0].created_blocks[i])));
 	}
 }
 
