@@ -426,8 +426,8 @@ walletUpdateBalancesInfo= function() {
 		walletUpdateBalancesXhr= null;
 
         for (var i=0; i < resJson.length; i++) {
-            wallet_addrs[resJson[i].address].balance = resJson[i].ledger_info.final_ledger_info.balance;
-            wallet_addrs[resJson[i].address].candidate_balance = resJson[i].ledger_info.candidate_ledger_info.balance;
+            wallet_addrs[resJson[i].address].balance = resJson[i].final_balance;
+            wallet_addrs[resJson[i].address].candidate_balance = resJson[i].candidate_balance;
             var balancefield = document.getElementById('wallet_balance_'+resJson[i].address);
             if(!balancefield)
                 continue;

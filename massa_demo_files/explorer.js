@@ -430,6 +430,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 	}
 
 	addheader('Block ' + String(jsondata['what']));
+	console.log(jsondata)
 	if (jsondata.content == null) {
 		var tr = document.createElement('TR');
 		tab.appendChild(tr);
@@ -457,36 +458,11 @@ explorerSetBlockSearchTable= function(jsondata) {
 		addrow('Endorsement Count', jsondata.block.header.content.endorsements.length)
 
 		var operations = jsondata.block.operations;
+		console.log(operations)
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
-			var operation_type = Object.keys(operations[i].content.op)[0]
-			if (operation_type == 'RollSell' || operation_type == 'RollBuy') {
-				if (operation_type == 'RollBuy') {
-					type_id = 1
-				}
-				else {
-					type_id = 2
-				}
-				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
-				var encoded_fee = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(parsed_fee))
-				var encoded_expire_period = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(operations[i].content.expire_period))
-				var sender_pubkey = xbqcrypto.base58check_decode(operations[i].creator_public_key.slice(1)).slice(1)
-				var encoded_type_id = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(type_id))
-				var encoded_roll_count = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(operations[i].content.op[operation_type].roll_count))
-				var op_bytes_compact = xbqcrypto.Buffer.concat([encoded_fee, encoded_expire_period, sender_pubkey, encoded_type_id, encoded_roll_count])
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_blake3(xbqcrypto.Buffer.concat([sender_pubkey, op_bytes_compact])))
-				var tdc = addrow(operation_type, null)
-				tdc.appendChild(createSearchLink(String(tx_id)));
-			}
-			else if (Object.keys(operations[i].content.op)[0] == 'Transaction') {
-				parsed_fee = parseInt(new Decimal(operations[i].content.fee).times(1e9))
-				parsed_amount = parseInt(new Decimal(operations[i].content.op.Transaction.amount).times(1e9))
-				var op_bytes_compact = xbqcrypto.compute_bytes_compact(parsed_fee, operations[i].content.expire_period, 0, operations[i].content.op.Transaction.recipient_address, parsed_amount)
-				const public_key = xbqcrypto.base58check_decode(operations[i].creator_public_key.slice(1)).slice(1);
-				var tx_id = xbqcrypto.base58check_encode(xbqcrypto.hash_blake3(xbqcrypto.Buffer.concat([public_key, op_bytes_compact])));
-				var tdc = addrow('Transaction', null)
-				tdc.appendChild(createSearchLink(String(tx_id)));
-			}
+				var tdc = addrow("Op. " + i, null)
+				tdc.appendChild(createSearchLink(String(operations[i])));
 		}
 		
 		for (var i=0; i<jsondata.block.header.content.endorsements.length; i++) {
@@ -584,6 +560,7 @@ explorerSetTransactionSearchTable= function(jsondata) {
 
 explorerAddressSearchResult= null
 explorerSetAddressSearchTable= function(jsondata) {
+	console.log(jsondata)
 	explorerAddressSearchResult= jsondata
 	var div= document.getElementById('explorerAddressSearchResult');
 	if(!div) return;
@@ -638,7 +615,7 @@ explorerSetAddressSearchTable= function(jsondata) {
 
 	var final_rolls = jsondata[0].final_roll_count
 	addrow('Final rolls', final_rolls);
-	var active_rolls = jsondata[0].cycle_infos.active_rolls
+	var active_rolls = jsondata[0].cycle_infos[jsondata[0].cycle_infos.length - 1].active_rolls
 	addrow('Active rolls', active_rolls);
 	var candidate_rolls = jsondata[0].candidate_roll_count
 	addrow('Candidate rolls', candidate_rolls);
