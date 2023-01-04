@@ -240,8 +240,8 @@ explorerSearchBlock= function(what) {
 		explorerViewSelId= what
 		resJson['what'] = what
 
-		if (resJson.content != null) {
-			explorerSetBlockSearchTable(resJson);
+		if (resJson[0].content != null) {
+			explorerSetBlockSearchTable(resJson[0]);
 			// var statusdiv= document.getElementById('explorerSearchStatus');
 			// if(statusdiv) { statusdiv.style.color=''; statusdiv.innerHTML= ''; }
 
@@ -267,8 +267,8 @@ explorerSearchBlock= function(what) {
 		}
 			
 	}
-	data = [what]
-	explorerSearchBlockXhr = JsonRPCRequest('get_block', data, onresponse, onerror);
+	data = [[what]]
+	explorerSearchBlockXhr = JsonRPCRequest('get_blocks', data, onresponse, onerror);
 }
 
 var explorerSearchTransactionXhr= null
@@ -429,7 +429,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 		return a;
 	}
 
-	addheader('Block ' + String(jsondata['what']));
+	addheader('Block ' + String(jsondata['id']));
 	console.log(jsondata)
 	if (jsondata.content == null) {
 		var tr = document.createElement('TR');
