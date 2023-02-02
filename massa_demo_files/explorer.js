@@ -430,7 +430,6 @@ explorerSetBlockSearchTable= function(jsondata) {
 	}
 
 	addheader('Block ' + String(jsondata['id']));
-	console.log(jsondata)
 	if (jsondata.content == null) {
 		var tr = document.createElement('TR');
 		tab.appendChild(tr);
@@ -444,7 +443,7 @@ explorerSetBlockSearchTable= function(jsondata) {
 		if (jsondata.is_final) {
 			addrow('Status', 'Final')
 		}
-		else if (jsondata.is_stale) {
+		else if (jsondata.is_discarded) {
 			addrow('Status', 'Stale')
 		}
 		else if (!jsondata.is_final) {
@@ -458,7 +457,6 @@ explorerSetBlockSearchTable= function(jsondata) {
 		addrow('Endorsement Count', jsondata.block.header.content.endorsements.length)
 
 		var operations = jsondata.block.operations;
-		console.log(operations)
 		addrow('Op. Count', operations.length)
 		for(var i= 0 ; i < operations.length ; i++) {
 				var tdc = addrow("Op. " + i, null)
@@ -553,14 +551,12 @@ explorerSetTransactionSearchTable= function(jsondata) {
 		addrow('Fee', fee);
 	}
 	addrow('In pool', jsondata[0].in_pool);
-	console.log(addr);
 	addrow('Thread', xbqcrypto.get_address_thread(addr));
 }
 
 
 explorerAddressSearchResult= null
 explorerSetAddressSearchTable= function(jsondata) {
-	console.log(jsondata)
 	explorerAddressSearchResult= jsondata
 	var div= document.getElementById('explorerAddressSearchResult');
 	if(!div) return;
@@ -661,7 +657,6 @@ explorerSetAddressOperations = function(tab, jsondata) {
 	}
 
 	for (const [key, value] of Object.entries(jsondata)) {
-		console.log(key, value);
 		var tdc = addrow('Transaction', null);
 		tdc.appendChild(createSearchLink(String(key)));
 	}
@@ -961,8 +956,8 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 	
 		//Is the info present in the search results ?
 		if(explorerBlockSearchResult != null) {
-			if((!explorerBlockSearchResult.content.is_stale || explorerBlockSearchResult.content.is_final) && explorerGetViewIntervalResult != null) {
-				if(String(explorerBlockSearchResult['what']) == explorerViewSelId) {
+			if((!explorerBlockSearchResult.content.is_discarded || explorerBlockSearchResult.content.is_final) && explorerGetViewIntervalResult != null) {
+				if(String(explorerBlockSearchResult['id']) == explorerViewSelId) {
 					drawLinesToTimestamps = []
 					for (var i=0 ; i < nthreads ; i++) {
 						parentTimestamp = null
@@ -1007,7 +1002,7 @@ explorerViewUpdate= function(timestamp=null, relaunch=true) {
 
 		if(explorerGetViewIntervalResult[blocki].is_final)
 			ctx.fillStyle = "#50CC20";
-		else if(explorerGetViewIntervalResult[blocki].is_stale)
+		else if(explorerGetViewIntervalResult[blocki].is_discarded)
 			ctx.fillStyle = "#e82c2c";
 		else if(!explorerGetViewIntervalResult[blocki].is_in_blockclique)
 			ctx.fillStyle = "#FF8C00";
