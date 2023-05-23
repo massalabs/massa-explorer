@@ -44,11 +44,11 @@ function generate_random_privkey() {
 
 function deduce_address(pubkey, version) {
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(version));
-	return 'A' + base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]));
+	return 'AU' + base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]));
 }
 
 function parse_address(address) {
-    const pubkeyhash = base58check_decode(address.slice(1));
+    const pubkeyhash = base58check_decode(address.slice(2));
     if(pubkeyhash.length != 33)
         throw "Invalid address.";
     return {pubkeyhash: pubkeyhash.slice(1)};

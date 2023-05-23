@@ -201,7 +201,7 @@ parse_textprivkey = async function(txt) {
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
     var b58cpubkey = 'P' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version,pubkey]));
     var version = xbqcrypto.Buffer.from(xbqcrypto.varint_encode(0));
-    var addr = 'A' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))
+    var addr = 'AU' + xbqcrypto.base58check_encode(xbqcrypto.Buffer.concat([version, xbqcrypto.hash_blake3(pubkey)]))
     var thread = xbqcrypto.get_address_thread(addr);
     var parsed_privkey = {address: addr, b58cprivkey: txt, privkey: privkey, b58cpubkey: b58cpubkey, pubkey: pubkey, thread: thread};
     return parsed_privkey
