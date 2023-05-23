@@ -43,7 +43,7 @@ function deduce_address(pubkey, version) {
 }
 
 function parse_address(address) {
-    const pubkeyhash = base58check_decode(address.slice(1));
+    const pubkeyhash = base58check_decode(address.slice(2));
     if(pubkeyhash.length != 33)
         throw "Invalid address.";
     return {pubkeyhash: pubkeyhash.slice(1)};
